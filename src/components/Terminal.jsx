@@ -42,6 +42,7 @@ const CHIPS = ['help', 'whoami', 'projects', 'curl brev', 'curl slate', 'curl la
 const COMPLETIONS = ['help', 'whoami', 'projects', 'open brev', 'open slate', 'open latch', 'curl brev', 'curl slate', 'curl latch', 'gcc main.c', 'snake', 'sudo su', 'cat about.txt', 'cat main.c', 'clear', 'history', 'rm -rf /'];
 const C_SRC = ['#include <stdio.h>', '', 'int main(void) {', '    int tiempo_libre = 0;', '    char *name = "Jorge Muñiz";', '    printf("hola, soy %s\\n", name);', '    return *(int *)0;  /* oops */', '}'];
 const PROMPT = 'jorge@portfolio:~$ ';
+const SNAKE_CELL = 2;
 
 export default class Terminal extends Component {
   state = { lang: null, langFrom: null, lines: [], input: '', busy: false, snake: false };
@@ -241,7 +242,7 @@ export default class Terminal extends Component {
 
   startSnake() {
     this.out(this.S().snakeHelp, 'dim');
-    this._g = { W: 28, H: 12, s: [{ x: 8, y: 6 }, { x: 7, y: 6 }, { x: 6, y: 6 }], d: { x: 1, y: 0 }, nd: { x: 1, y: 0 }, f: { x: 18, y: 5 }, sc: 0 };
+    this._g = { W: 22, H: 14, s: [{ x: 8, y: 7 }, { x: 7, y: 7 }, { x: 6, y: 7 }], d: { x: 1, y: 0 }, nd: { x: 1, y: 0 }, f: { x: 16, y: 5 }, sc: 0 };
     this.setState({ snake: true, busy: true });
     clearInterval(this._sn);
     this._sn = setInterval(() => this.snakeStep(), 105);
@@ -273,16 +274,18 @@ export default class Terminal extends Component {
     } else g.s.pop();
     const el = this.snakeRef.current;
     if (!el) return;
-    const rows = [`score ${String(g.sc).padStart(3, '0')}`, '┌' + '─'.repeat(g.W) + '┐'];
+    // ASCII only (VT323 draws box-drawing glyphs wider), two chars per cell so cells are square.
+    const edge = '+' + '-'.repeat(g.W * SNAKE_CELL) + '+';
+    const rows = [`score ${String(g.sc).padStart(3, '0')}`, edge];
     for (let y = 0; y < g.H; y++) {
-      let r = '│';
+      let r = '|';
       for (let x = 0; x < g.W; x++) {
         const i = g.s.findIndex(p => p.x === x && p.y === y);
-        r += i === 0 ? '@' : i > 0 ? 'o' : (g.f.x === x && g.f.y === y) ? '*' : ' ';
+        r += i === 0 ? '@@' : i > 0 ? '[]' : (g.f.x === x && g.f.y === y) ? '<>' : '  ';
       }
-      rows.push(r + '│');
+      rows.push(r + '|');
     }
-    rows.push('└' + '─'.repeat(g.W) + '┘');
+    rows.push(edge);
     el.textContent = rows.join('\n');
     const sc = this.scrollRef.current;
     if (sc) sc.scrollTop = sc.scrollHeight;
@@ -347,7 +350,7 @@ export default class Terminal extends Component {
                 {ln.href && <a href={ln.href} target="_blank" rel="noopener" style={{ color: '#c6f24e' }}>{ln.linkText}</a>}
               </div>
             ))}
-            {snake && <pre ref={this.snakeRef} style={{ margin: '6px 0', font: 'inherit', lineHeight: 1, color: '#c6f24e' }} />}
+            {snake && <pre ref={this.snakeRef} style={{ margin: '6px 0', font: 'inherit', lineHeight: '18px', color: '#c6f24e' }} />}
             {showInput && (
               <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
                 <span style={{ color: '#c6f24e', whiteSpace: 'nowrap' }}>jorge@portfolio:~$</span>
