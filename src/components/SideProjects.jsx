@@ -1,23 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
 
+const GH = 'https://github.com/';
 const PROJ = [
-  { id: 'cronwatch', stack: ['Python', 'APScheduler', 'SQLite', 'Telegram API'], url: '#',
-    es: 'Vigila mis cron jobs y avisa por Telegram cuando uno falla o tarda más de la cuenta.', en: 'Watches my cron jobs and pings Telegram when one fails or runs late.' },
-  { id: 'tfg-queue', stack: ['asyncio', 'Redis Streams', 'Grafana'], url: '#',
-    es: 'TFG: cola de tareas distribuida con reintentos exponenciales y dead-letter queue.', en: 'Final-year project: a distributed task queue with exponential retries and a dead-letter queue.' },
-  { id: 'ratelab', stack: ['FastAPI', 'Redis', 'Locust'], url: '#',
-    es: 'Banco de pruebas de rate limiting: token bucket, sliding window y fixed window, con benchmarks.', en: 'A rate-limiting testbed: token bucket, sliding window and fixed window, with benchmarks.' },
-  { id: 'pgsnap', stack: ['Python', 'boto3', 'PostgreSQL', 'Docker'], url: '#',
-    es: 'Backups incrementales de Postgres a S3 con retención configurable y restauración en un comando.', en: 'Incremental Postgres backups to S3 with configurable retention and one-command restore.' },
-  { id: 'minorm', stack: ['Python', 'sqlite3', 'pytest'], url: '#',
-    es: 'ORM de juguete hecho con metaclases para entender cómo funciona SQLAlchemy por dentro.', en: 'A toy ORM built with metaclasses to understand how SQLAlchemy works inside.' },
-  { id: 'cercanias-bot', stack: ['httpx', 'BeautifulSoup', 'cron'], url: '#',
-    es: 'Bot de Telegram que avisa de retrasos del tren de cercanías antes de salir de casa.', en: 'A Telegram bot that warns about commuter-train delays before I leave home.' },
+  { id: 'remarket', stack: ['FastAPI', 'SQLModel', 'PostgreSQL', 'React', 'TypeScript'], url: GH + 'Pepe-Alfaro/iw-grupo6',
+    es: 'Plataforma C2C de segunda mano: publicar, buscar y comprar a precio fijo o en subasta con adjudicación automática. Proyecto de Ingeniería Web en equipo con metodologías ágiles; yo desarrollé todo el código.',
+    en: 'Second-hand C2C marketplace: list, search and buy at a fixed price or by auction with automatic award. Team project for Web Engineering using agile methods; I wrote all of the code.' },
+  { id: 'issbc', stack: ['Python', 'PyQt6', 'Ollama', 'MVC'], url: GH + 'i32mumaj/ISSBC---Trabajo-Final',
+    es: 'App de escritorio para analizar y diagnosticar casos legales con un LLM local (Ollama). Arquitectura MVC con PyQt6. Hecha en 3º para Ingeniería de Sistemas Software Basados en Conocimiento.',
+    en: 'Desktop app that analyses and diagnoses legal cases with a local LLM (Ollama). MVC architecture with PyQt6. Built in 3rd year for Knowledge-Based Software Systems Engineering.' },
+  { id: 'static_gen', stack: ['Python', 'Markdown', 'HTML/CSS'], url: GH + 'i32mumaj/static_gen',
+    es: 'Generador de sitios estáticos: convierte Markdown en páginas HTML con CSS usando un parser propio. Hecho siguiendo un curso de Boot.dev.',
+    en: 'Static site generator: turns Markdown into HTML pages with CSS using a hand-written parser. Built following a Boot.dev course.' },
+  { id: 'ds', stack: ['C', 'single-header'], url: GH + 'i32mumaj/ds',
+    es: 'Librería single-header en C con las estructuras de datos esenciales y dependencias mínimas. Hecha para entender cómo funcionan a bajo nivel.',
+    en: 'Lightweight single-header C library with the essential data structures and minimal dependencies. Built to understand how they work at a low level.' },
+  { id: 'mdas-grupo15', stack: ['Java', 'design patterns'], url: GH + 'i32mumaj/MDAS-Grupo15',
+    es: 'Prácticas del Bloque 1 de Modelado y Diseño Avanzado de Software: implementación de patrones de diseño.',
+    en: 'Block 1 labs of Advanced Software Modelling and Design: implementing design patterns.' },
+  { id: 'asteroids', stack: ['Python', 'pygame'], url: GH + 'i32mumaj/asteroids',
+    es: 'El clásico Asteroids hecho con pygame, como parte del roadmap de backend de Boot.dev.',
+    en: 'The classic Asteroids built with pygame, as part of the Boot.dev backend roadmap.' },
+  { id: 'sicue', stack: ['C++', 'Qt'], url: GH + 'i32mumaj/Grupo105Sicue',
+    es: 'Gestión de intercambios universitarios SICUE con Qt y C++. Mi primer proyecto de la carrera.',
+    en: 'Management of SICUE university exchanges with Qt and C++. My first project at university.' },
 ];
 
 const T = {
-  es: { kicker: 'otros proyectos', title: 'Side quests', intro: 'Proyectos más pequeños: experimentos, herramientas que uso a diario y cosas que hice para entender algo por dentro.', repo: 'ver repo', hint: 'click en la carta de arriba = pop() · pasa el ratón para abrir el abanico' },
-  en: { kicker: 'other projects', title: 'Side quests', intro: 'Smaller projects: experiments, tools I use every day and things I built to understand how something works inside.', repo: 'view repo', hint: 'click the top card = pop() · hover to fan the deck' },
+  es: { kicker: 'otros proyectos', title: 'Side quests', intro: 'Proyectos de la carrera y de cursos: de mi primera app en C++ a plataformas web completas.', repo: 'ver repo', hint: 'click en la carta de arriba = pop() · pasa el ratón para abrir el abanico' },
+  en: { kicker: 'other projects', title: 'Side quests', intro: 'University and course projects: from my first C++ app to full web platforms.', repo: 'view repo', hint: 'click the top card = pop() · hover to fan the deck' },
 };
 
 const N = PROJ.length;
