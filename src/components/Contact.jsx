@@ -21,7 +21,7 @@ const labelStyle = { display: 'flex', flexDirection: 'column', gap: 8, font: `50
 const fieldStyle = { background: '#0d0f0b', border: '1px solid rgba(243,239,230,.25)', color: '#f3efe6', font: "400 16px/1 'Geist',sans-serif", padding: 14, outline: 'none' };
 const hdr = { color: 'rgba(243,239,230,.45)' };
 
-export default function Contact({ lang, email: myEmail, linkedin }) {
+export default function Contact({ lang, email: myEmail }) {
   const t = T[lang] || T.es;
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('');
@@ -51,8 +51,6 @@ export default function Contact({ lang, email: myEmail, linkedin }) {
     try { await navigator.clipboard.writeText(myEmail); flash('copied'); } catch { /* clipboard unavailable */ }
   };
 
-  const links = [{ label: 'GitHub', href: GITHUB_URL, short: 'github.com/i32mumaj' }]
-    .concat(linkedin ? [{ label: 'LinkedIn', href: linkedin, short: linkedin.replace(/^https?:\/\/(www\.)?/, '') }] : []);
   const statusLine = { opened: ['→ ' + t.opened, '#c6f24e'], copied: ['✓ ' + myEmail, '#c6f24e'], empty: ['! ' + t.empty, '#ff8a6a'] }[status];
 
   return (
@@ -112,9 +110,7 @@ export default function Contact({ lang, email: myEmail, linkedin }) {
 
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', borderTop: '1px solid rgba(198,242,78,.3)', paddingTop: 22 }}>
           <span style={{ font: `500 11px/1 ${mono}`, color: 'rgba(243,239,230,.55)' }}>{t.orDirect}</span>
-          {links.map(lk => (
-            <a key={lk.label} href={lk.href} target="_blank" rel="noopener" className="h-fill" style={{ border: '1px solid #c6f24e', padding: '10px 14px', font: `500 13px/1 ${mono}`, textDecoration: 'none' }}>{lk.label} · {lk.short} ↗</a>
-          ))}
+          <a href={GITHUB_URL} target="_blank" rel="noopener" className="h-fill" style={{ border: '1px solid #c6f24e', padding: '10px 14px', font: `500 13px/1 ${mono}`, textDecoration: 'none' }}>GitHub · github.com/i32mumaj ↗</a>
         </div>
       </div>
     </div>

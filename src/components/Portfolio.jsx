@@ -78,7 +78,7 @@ export default function Portfolio() {
         <Stack lang={lang} />
       </section>
       <section data-screen-label="Contact" style={sectionBorder}>
-        <Contact lang={lang} email={config.email} linkedin={config.linkedin} />
+        <Contact lang={lang} email={config.email} />
       </section>
 
       <div data-nohijack="1" style={{ position: 'fixed', left: 0, right: 0, top: 0, height: '72vh', zIndex: 110, transform: `translateY(${open ? '0%' : 'calc(-100% - 4px)'})`, transition: 'transform .45s cubic-bezier(.2,.8,.2,1)', background: '#0b0c0a', borderBottom: '2px solid #c6f24e', boxShadow: '0 20px 60px rgba(0,0,0,.6)', display: 'flex', flexDirection: 'column' }}>
