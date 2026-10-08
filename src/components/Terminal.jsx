@@ -45,6 +45,9 @@ const PROMPT = 'jorge@portfolio:~$ ';
 const SNAKE_CELL = 2;
 const SNAKE_FRUITS = 5;
 const SNAKE_TICK = 130;
+const GOD_TICK = 12;
+// Cheat for the snake win: logged base64-encoded so it only shows up to someone poking around devtools.
+const GOD_HINT = 'c25ha2UgLS1nb2QtbW9kZQ==';
 
 export default class Terminal extends Component {
   state = { lang: null, langFrom: null, lines: [], input: '', busy: false, snake: false };
@@ -153,7 +156,7 @@ export default class Terminal extends Component {
       case 'gcc': case 'cc': case 'g++': case 'make': case 'clang': return this.gcc();
       case './jorge': case './a.out':
         this.out('hola, soy Jorge Muñiz', 'ok'); await this.w(500); this.out('Segmentation fault (core dumped)', 'err'); return;
-      case 'snake': return this.startSnake();
+      case 'snake': return this.startSnake(a === '--god-mode');
       case 'hire':
         if (!this._won || !a.startsWith('jorge')) return this.out(`${c0}: ${S.nf}. ${S.tryHelp}`, 'err');
         this.out(S.hiring, 'dim');
@@ -247,13 +250,19 @@ export default class Terminal extends Component {
     this.out(S.rmJoke, 'ok');
   }
 
-  startSnake() {
+  startSnake(god = false) {
     this.out(this.S().snakeHelp, 'dim');
-    this._g = { W: 22, H: 14, s: [{ x: 8, y: 7 }, { x: 7, y: 7 }, { x: 6, y: 7 }], d: { x: 1, y: 0 }, nd: { x: 1, y: 0 }, f: [], sc: 0 };
-    while (this._g.f.length < SNAKE_FRUITS && this.spawnFruit(this._g));
+    if (!god && !Terminal._hinted) {
+      Terminal._hinted = true;
+      console.log('%c[snake] debug build · flag=' + GOD_HINT, 'color:#c6f24e;background:#0b0c0a;padding:2px 6px;font-family:monospace');
+    }
+    this._g = god
+      ? { W: 22, H: 14, s: [{ x: 3, y: 0 }, { x: 2, y: 0 }, { x: 1, y: 0 }], d: { x: 1, y: 0 }, nd: { x: 1, y: 0 }, f: [], sc: 0, god: true }
+      : { W: 22, H: 14, s: [{ x: 8, y: 7 }, { x: 7, y: 7 }, { x: 6, y: 7 }], d: { x: 1, y: 0 }, nd: { x: 1, y: 0 }, f: [], sc: 0 };
+    if (!god) while (this._g.f.length < SNAKE_FRUITS && this.spawnFruit(this._g));
     this.setState({ snake: true, busy: true });
     clearInterval(this._sn);
-    this._sn = setInterval(() => this.snakeStep(), SNAKE_TICK);
+    this._sn = setInterval(() => this.snakeStep(), god ? GOD_TICK : SNAKE_TICK);
     return new Promise(res => { this._snakeDone = res; });
   }
 
@@ -265,6 +274,14 @@ export default class Terminal extends Component {
     if (!free.length) return false;
     g.f.push(free[Math.floor(Math.random() * free.length)]);
     return true;
+  }
+
+  // Next move along a Hamiltonian cycle: zigzag through columns 1..W-1, back up column 0.
+  godDir(g, { x, y }) {
+    if (x === 0) return y > 0 ? { x: 0, y: -1 } : { x: 1, y: 0 };
+    if (y % 2 === 0) return x < g.W - 1 ? { x: 1, y: 0 } : { x: 0, y: 1 };
+    if (x > 1) return { x: -1, y: 0 };
+    return y === g.H - 1 ? { x: -1, y: 0 } : { x: 0, y: 1 };
   }
 
   snakeKey(e) {
@@ -282,18 +299,17 @@ export default class Terminal extends Component {
   snakeStep() {
     const g = this._g;
     if (!g) return;
-    g.d = g.nd;
+    g.d = g.god ? this.godDir(g, g.s[0]) : g.nd;
     const h = { x: g.s[0].x + g.d.x, y: g.s[0].y + g.d.y };
-    const fi = g.f.findIndex(f => f.x === h.x && f.y === h.y);
+    const fi = g.god ? 0 : g.f.findIndex(f => f.x === h.x && f.y === h.y);
     // The tail moves out of the way this tick unless we're growing, so the head may follow it.
     const body = fi >= 0 ? g.s : g.s.slice(0, -1);
     if (h.x < 0 || h.y < 0 || h.x >= g.W || h.y >= g.H || body.some(p => p.x === h.x && p.y === h.y)) { this.snakeEnd(); return; }
     g.s.unshift(h);
     if (fi >= 0) {
       g.sc++;
-      g.f.splice(fi, 1);
       if (g.s.length >= g.W * g.H) { this.snakeWin(); return; }
-      this.spawnFruit(g);
+      if (!g.god) { g.f.splice(fi, 1); this.spawnFruit(g); }
     } else g.s.pop();
     const el = this.snakeRef.current;
     if (!el) return;
