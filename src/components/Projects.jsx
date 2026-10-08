@@ -8,7 +8,7 @@ const T = {
     brevDesc: 'Acortador de enlaces. Recibe una URL, genera un código corto y redirige con un 307.',
     slateDesc: 'Gastos en grupo al estilo Tricount: apuntas quién paga y calcula cuánto debe cada uno y cómo saldar con el mínimo de transferencias.',
     latchDesc: 'Gestor de contraseñas zero-knowledge: se cifra todo en tu navegador y el servidor solo guarda texto cifrado.',
-    open: 'abrir', sim: 'demo simulada', real: 'cifrado real en tu navegador', shorten: 'acortar', visit: 'visitar →', paid: 'pagó', add: '+ gasto',
+    open: 'Abrir', sim: 'demo simulada', real: 'cifrado real en tu navegador', shorten: 'acortar', visit: 'visitar →', paid: 'pagó', add: '+ gasto',
     browser: 'tu navegador', server: 'lo que ve el servidor', secret: 'secreto', keyNote: 'la clave se deriva aquí y nunca sale de este dispositivo.',
     live: 'en vivo · desde la demo', execute: 'ejecutar en la demo',
     sum: { b0: 'Crear enlace corto', b1: 'Redirigir', s0: 'Añadir gasto', s1: 'Calcular saldos', l0: 'Guardar secreto cifrado', l1: 'Listar cofre' },
@@ -19,7 +19,7 @@ const T = {
     brevDesc: 'Link shortener. Takes a URL, generates a short code and redirects with a 307.',
     slateDesc: 'Tricount-style group expenses: log who paid and it works out what everyone owes and how to settle with the fewest transfers.',
     latchDesc: 'Zero-knowledge password manager: everything is encrypted in your browser and the server only stores ciphertext.',
-    open: 'open', sim: 'simulated demo', real: 'real encryption in your browser', shorten: 'shorten', visit: 'visit →', paid: 'paid', add: '+ expense',
+    open: 'Open', sim: 'simulated demo', real: 'real encryption in your browser', shorten: 'shorten', visit: 'visit →', paid: 'paid', add: '+ expense',
     browser: 'your browser', server: 'what the server sees', secret: 'secret', keyNote: 'the key is derived here and never leaves this device.',
     live: 'live · from the demo', execute: 'run in the demo',
     sum: { b0: 'Create short link', b1: 'Redirect', s0: 'Add expense', s1: 'Compute balances', l0: 'Store encrypted secret', l1: 'List vault' },
@@ -64,15 +64,15 @@ function ProjectName({ letters }) {
   );
 }
 
-function DocsColumn({ name, url, desc, endpoints, t }) {
+function DocsColumn({ name, label, url, desc, endpoints, t }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-        <ProjectName letters={name} />
-        <a href={url} target="_blank" rel="noopener" className="h-shadow" style={{ background: '#c6f24e', color: '#0b0c0a', padding: '12px 16px', font: `600 12px/1 ${mono}`, textDecoration: 'none' }}>{t.open} ↗</a>
-      </div>
+      <ProjectName letters={name} />
       <div style={{ font: "400 16px/1.45 'Geist',sans-serif", color: 'rgba(243,239,230,.85)', maxWidth: 520 }}>{desc}</div>
       <div style={{ font: `400 11px/1 ${mono}`, color: 'rgba(243,239,230,.5)' }}>FastAPI · SQLAlchemy · SQLite · React</div>
+      <a href={url} target="_blank" rel="noopener" className="h-open" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, background: '#c6f24e', color: '#0b0c0a', padding: '22px 24px', textDecoration: 'none', font: `600 18px/1 ${mono}`, transition: 'box-shadow .15s,transform .15s' }}>
+        <span>{t.open} {label}</span><span style={{ fontSize: 26, lineHeight: 1 }}>↗</span>
+      </a>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {endpoints.map(ep => (
           <div key={ep.id} style={{ border: `1px solid ${ep.open ? '#c6f24e' : 'rgba(243,239,230,.18)'}`, background: '#0d0f0b', transition: 'border-color .2s' }}>
@@ -285,7 +285,7 @@ export default class Projects extends Component {
         </div>
 
         <div ref={this.pBrev} data-p="brev" style={rowStyle}>
-          <DocsColumn name={this.nameLetters('Brev', 'brev', 2)} url={urls.brev} desc={t.brevDesc} endpoints={this.endpoints('brev', tr)} t={t} />
+          <DocsColumn label="Brev" name={this.nameLetters('Brev', 'brev', 2)} url={urls.brev} desc={t.brevDesc} endpoints={this.endpoints('brev', tr)} t={t} />
           <DemoPanel flash={st.flash === 'brev'} title="POST /api/links" badge={t.sim}>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'flex', gap: 8 }}>
@@ -305,7 +305,7 @@ export default class Projects extends Component {
         </div>
 
         <div ref={this.pSlate} data-p="slate" style={rowStyle}>
-          <DocsColumn name={this.nameLetters('Slate', 'slate', 2)} url={urls.slate} desc={t.slateDesc} endpoints={this.endpoints('slate', tr)} t={t} />
+          <DocsColumn label="Slate" name={this.nameLetters('Slate', 'slate', 2)} url={urls.slate} desc={t.slateDesc} endpoints={this.endpoints('slate', tr)} t={t} />
           <DemoPanel flash={st.flash === 'slate'} title="GET /groups/42/balances" badge={t.sim}>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center', font: `500 12px/1 ${mono}` }}>
@@ -357,7 +357,7 @@ export default class Projects extends Component {
         </div>
 
         <div ref={this.pLatch} data-p="latch" style={{ ...rowStyle, borderBottom: '1px solid rgba(198,242,78,.3)' }}>
-          <DocsColumn name={this.nameLetters('Latch', 'latch', 3)} url={urls.latch} desc={t.latchDesc} endpoints={this.endpoints('latch', tr)} t={t} />
+          <DocsColumn label="Latch" name={this.nameLetters('Latch', 'latch', 3)} url={urls.latch} desc={t.latchDesc} endpoints={this.endpoints('latch', tr)} t={t} />
           <DemoPanel flash={st.flash === 'latch'} title="AES-256-GCM · PBKDF2" badge={t.real}>
             <div style={{ padding: 20, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 16 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
