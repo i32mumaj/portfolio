@@ -10,6 +10,7 @@ export const ACHIEVEMENTS = [
   { id: 'kill', es: ['kill -9', 'mataste una sección', 'algún proceso sobra (ps)'], en: ['kill -9', 'killed a section', 'some process has to go (ps)'] },
   { id: 'delete', es: ['405', 'intentaste borrarme', 'prueba otros métodos HTTP conmigo'], en: ['405', 'tried to delete me', 'try other HTTP methods on me'] },
   { id: 'konami', es: ['Core dumped', 'rompiste la web', '↑ ↑ ↓ ↓ …'], en: ['Core dumped', 'crashed the site', '↑ ↑ ↓ ↓ …'] },
+  { id: 'sigstop', es: ['SIGSTOP', 'te fuiste y volviste', 'a veces hay que irse para volver'], en: ['SIGSTOP', 'left and came back', 'sometimes you have to leave to come back'] },
   { id: 'english', es: ['Bilingüe', 'cambiaste el idioma', 'habla otro idioma'], en: ['Bilingual', 'switched language', 'speak another language'] },
   { id: 'eof', es: ['EOF', 'llegaste al final', 'llega hasta abajo del todo'], en: ['EOF', 'reached the end', 'scroll all the way down'] },
 ];

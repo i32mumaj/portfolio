@@ -73,7 +73,7 @@ export default function Portfolio() {
   const openRef = useRef(open);
 
   useEffect(() => { openRef.current = open; }, [open]);
-  useEasterEggs(() => setSegv(true));
+  useEasterEggs(lang, () => setSegv(true));
   const endSegv = useCallback(() => setSegv(false), []);
 
   useEffect(() => {
