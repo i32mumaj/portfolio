@@ -2,8 +2,8 @@ import { Component, createRef } from 'react';
 import { clamp01, hash } from '../lib/util.js';
 
 const T = {
-  es: { from: 'C / C++', to: 'Python', role: 'Backend Engineer', dMore: 'sigue bajando', dDone: 'compilado ✓', dScroll: 'HAZ SCROLL PARA COMPILARME', dHint: 'scroll = compilar la memoria · ratón = decodificar · click = malloc() · shift+click = free()' },
-  en: { from: 'C / C++', to: 'Python', role: 'Backend Engineer', dMore: 'keep scrolling', dDone: 'compiled ✓', dScroll: 'SCROLL TO COMPILE ME', dHint: 'scroll = compile the memory · mouse = decode · click = malloc() · shift+click = free()' },
+  es: { from: 'C / C++', to: 'Python', role: 'Backend Engineer', dDown: 'BAJA', dDone: 'compilado ✓', dScroll: 'HAZ SCROLL PARA COMPILARME', dHint: 'scroll = compilar la memoria · ratón = decodificar · click = malloc() · shift+click = free()' },
+  en: { from: 'C / C++', to: 'Python', role: 'Backend Engineer', dDown: 'SCROLL DOWN', dDone: 'compiled ✓', dScroll: 'SCROLL TO COMPILE ME', dHint: 'scroll = compile the memory · mouse = decode · click = malloc() · shift+click = free()' },
 };
 
 const CODES = [
@@ -12,7 +12,7 @@ const CODES = [
   ['from fastapi import FastAPI', '', 'app = FastAPI()', '', '@app.get("/jorge")', 'async def jorge():', '    return {"role": "backend",', '            "lang": "python"}'],
 ];
 
-const STOPS = [0, 0.2, 0.4, 0.85, 1];
+const SCROLL_PX = 2800;
 const MSG = 'JORGE MUÑIZ // BACKEND ENGINEER // PYTHON . FASTAPI . SQLALCHEMY // FORMERLY C & C++ // BREV . SLATE . LATCH // ';
 const GLITCH = '!<>-_/[]{}=+*^?#01;:';
 
@@ -72,13 +72,13 @@ function buildName(W, H, dpr, fs, x, y1, y2) {
 }
 
 export default class Hero extends Component {
-  state = { p: 0, ck: -1, press: 0 };
+  state = { p: 0 };
   canvasRef = createRef();
   ptrRef = createRef();
 
   componentDidMount() {
     this._mx = -9999; this._my = -9999;
-    this._pt = 0; this._pd = 0; this._press = 0;
+    this._pt = 0; this._pd = 0;
     this._onMove = e => { this._mx = e.clientX; this._my = e.clientY; };
     this._onDown = e => this.down(e);
     this._onWheel = e => this.wheel(e);
@@ -110,52 +110,33 @@ export default class Hero extends Component {
     window.removeEventListener('touchmove', this._onTM);
   }
 
-  atStop() { return STOPS.findIndex(s => Math.abs(this._pt - s) < 1e-4); }
-
   wheel(e) {
     if (e.target && e.target.closest && e.target.closest('[data-nohijack]')) return;
     if (window.scrollY > 2) return;
-    const at = this.atStop();
-    if (!this._tw && performance.now() > (this._holdUntil || 0) && ((e.deltaY > 0 && at === STOPS.length - 1) || (e.deltaY < 0 && at === 0))) return;
-    e.preventDefault();
     const dy = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 600 : 1);
-    this.advance(Math.max(-120, Math.min(120, dy)));
+    if (!this.captures(dy)) return;
+    e.preventDefault();
+    this.advance(dy);
   }
 
   touchMove(e) {
-    if (window.scrollY > 2 || (!this._tw && performance.now() > (this._holdUntil || 0) && Math.abs(this._pt - 1) < 1e-4 && this._ty - e.touches[0].clientY > 0)) return;
+    const y = e.touches[0].clientY, dy = (this._ty - y) * 2;
+    if (window.scrollY > 2 || !this.captures(dy)) return;
     e.preventDefault();
-    const y = e.touches[0].clientY;
-    this.advance((this._ty - y) * 2);
+    this.advance(dy);
     this._ty = y;
   }
 
+  // The hero keeps the scroll until progress hits an end; at 100% it holds briefly so inertia doesn't skip past.
+  captures(dy) {
+    if (dy > 0) return this._pt < 1 || performance.now() < (this._holdUntil || 0);
+    return this._pt > 0;
+  }
+
   advance(dy) {
-    if (this._tw || performance.now() < (this._holdUntil || 0)) { this._press = 0; return; }
-    const z0 = 0.4, z1 = 0.85, pt = this._pt;
-    // Between the "decode" and "serve" stops the scroll drives progress continuously.
-    if ((dy > 0 && pt >= z0 - 1e-4 && pt < z1 - 1e-4) || (dy < 0 && pt > z0 + 1e-4 && pt <= z1 + 1e-4)) {
-      this._lastWheel = performance.now(); this._press = 0;
-      this._pt = Math.max(z0, Math.min(z1, pt + dy * (z1 - z0) / 900));
-      if (Math.abs(this._pt - z1) < 1e-4 || Math.abs(this._pt - z0) < 1e-4) {
-        this._pt = Math.abs(this._pt - z1) < 1e-4 ? z1 : z0;
-        this._holdUntil = performance.now() + 600;
-      }
-      return;
-    }
-    const at = this.atStop();
-    if (at < 0) return;
-    if ((dy > 0 && at === STOPS.length - 1) || (dy < 0 && at === 0)) return;
-    this._lastWheel = performance.now();
-    if (!(at === 0 && dy > 0)) {
-      if (Math.sign(dy) !== Math.sign(this._pressDir || 0)) this._press = 0;
-      this._pressDir = Math.sign(dy); this._press += Math.abs(dy);
-      if (this._press < 60) return;
-    }
-    this._press = 0;
-    const to = STOPS[at + (dy > 0 ? 1 : -1)], from = this._pt;
-    this._tw = { from, to, start: performance.now(), dur: Math.max(650, Math.min(1100, Math.abs(to - from) / 0.15 * 850)) };
-    this._holdUntil = this._tw.start + this._tw.dur + 600;
+    const before = this._pt;
+    this._pt = clamp01(before + Math.max(-120, Math.min(120, dy)) / SCROLL_PX);
+    if (this._pt >= 1 && before < 1) this._holdUntil = performance.now() + 500;
   }
 
   down(e) {
@@ -211,19 +192,9 @@ export default class Hero extends Component {
     const h = this._heap;
     const { ctx, W, H, cw, ch, padL, padT, cols, rows, bytes, garb, mask, heat, hex, scat } = h;
 
-    if (this._tw) {
-      const tw = this._tw, k = Math.min(1, (performance.now() - tw.start) / tw.dur);
-      const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
-      this._pd = tw.from + (tw.to - tw.from) * e;
-      if (k >= 1) { this._pd = this._pt = tw.to; this._tw = null; }
-    } else if (Math.abs(this._pd - this._pt) > 1e-4) this._pd += (this._pt - this._pd) * 0.14;
+    if (Math.abs(this._pd - this._pt) > 1e-4) this._pd += (this._pt - this._pd) * 0.14;
     else this._pd = this._pt;
-    if (performance.now() - (this._lastWheel || 0) > 400) this._press *= 0.9;
-    {
-      const at = this.atStop();
-      const ck = at > 0 && !this._tw ? at : -1, pr = Math.min(1, this._press / 60);
-      if (Math.abs(this._pd - this.state.p) > 0.0003 || ck !== this.state.ck || Math.abs(pr - this.state.press) > 0.02) this.setState({ p: this._pd, ck, press: pr });
-    }
+    if (Math.abs(this._pd - this.state.p) > 0.0003) this.setState({ p: this._pd });
 
     const p = this._pd, t = ts / 1000;
     const c0 = clamp01(p / 0.2), conv = 1 - Math.pow(1 - c0, 3), scan = clamp01((p - 0.2) / 0.2), dec = clamp01((p - 0.4) / 0.15), fin = clamp01((p - 0.87) / 0.13);
@@ -329,7 +300,7 @@ export default class Hero extends Component {
 
   render() {
     const t = T[this.props.lang] || T.es;
-    const { p, ck, press } = this.state;
+    const { p } = this.state;
 
     let fD, tD, mD = 0;
     if (p < 0.57) fD = tD = 0;
@@ -347,7 +318,7 @@ export default class Hero extends Component {
     const dOp = clamp01((p - 0.4) / 0.08);
     const stamp = clamp01((p - 0.9) / 0.07);
     const pct = Math.round(p * 100);
-    const ckLabel = ck === 4 ? t.dDone : `${t.dMore} → ${['', 'write', 'decode', 'serve'][ck] || ''}`;
+    const done = p >= 0.99, intro = clamp01(p / 0.04);
     const mono = "'Geist Mono',monospace";
     const hudBox = { background: '#0b0c0a', border: '1px solid rgba(198,242,78,.35)', pointerEvents: 'none' };
 
@@ -363,12 +334,16 @@ export default class Hero extends Component {
             <div style={{ padding: '7px 10px', color: '#c6f24e' }}>{pct}%</div>
           </div>
 
-          <div style={{ position: 'absolute', left: '50%', top: 72, transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 6, pointerEvents: 'none', opacity: ck > 0 ? 1 : 0, transition: 'opacity .3s' }}>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center', background: '#0b0c0a', border: '1px solid #c6f24e', color: '#c6f24e', padding: '10px 16px', font: `600 14px/1 ${mono}` }}>
-              <span style={{ display: 'inline-block', animation: 'jmBounce 1.2s ease-in-out infinite' }}>↓</span>{ckLabel}
+          <div style={{ position: 'absolute', right: 24, top: 120, bottom: 24, display: 'flex', gap: 14, alignItems: 'stretch', pointerEvents: 'none', zIndex: 3, opacity: intro, transition: 'opacity .3s' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 18, font: `600 14px/1 ${mono}`, color: '#c6f24e' }}>
+              <span style={{ font: "400 34px/.8 'VT323',monospace", background: '#0b0c0a', padding: '2px 4px' }}>{pct}%</span>
+              <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '.12em', background: '#0b0c0a', padding: '6px 2px' }}>{done ? t.dDone.toUpperCase() : t.dDown}</span>
             </div>
-            <div style={{ height: 3, background: 'rgba(198,242,78,.2)', opacity: ck === 4 ? 0 : 1 }}>
-              <div style={{ height: '100%', background: '#c6f24e', width: `${Math.round(press * 100)}%` }} />
+            <div style={{ width: 22, position: 'relative', background: 'rgba(198,242,78,.14)' }}>
+              <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: `${pct}%`, background: '#c6f24e' }} />
+              <div style={{ position: 'absolute', left: '50%', top: `${pct}%`, transform: 'translate(-50%,6px)', opacity: done ? 0 : 1 }}>
+                <div style={{ fontSize: 28, lineHeight: 1, color: '#c6f24e', animation: 'jmBounce 1.1s ease-in-out infinite' }}>↓</div>
+              </div>
             </div>
           </div>
 
@@ -387,7 +362,7 @@ export default class Hero extends Component {
             <div style={{ font: `400 11px/1.5 ${mono}`, opacity: 0.6 }}>{t.dHint}</div>
           </div>
 
-          <div style={{ position: 'absolute', right: 24, bottom: 24, width: 'min(470px,42vw)', opacity: dOp, transform: `translateY(${(1 - dOp) * 40}px)`, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', right: 84, bottom: 24, width: 'min(470px,42vw)', opacity: dOp, transform: `translateY(${(1 - dOp) * 40}px)`, pointerEvents: 'none' }}>
             <div style={{ background: '#0b0c0a', border: '1px solid rgba(198,242,78,.5)' }}>
               <div style={{ display: 'flex', borderBottom: '1px solid rgba(198,242,78,.5)', font: `500 11px/1 ${mono}` }}>
                 {['main.c', 'main.cpp', 'main.py'].map((f, i) => (
@@ -410,7 +385,7 @@ export default class Hero extends Component {
             <div style={{ position: 'absolute', right: -8, top: -28, transform: `rotate(-7deg) scale(${1.5 - 0.5 * stamp})`, opacity: stamp, border: '2px solid #c6f24e', color: '#c6f24e', padding: '9px 14px', font: `600 26px/1 ${mono}`, background: '#0b0c0a' }}>200 OK</div>
           </div>
 
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', opacity: 1 - clamp01(p / 0.12), transform: `scale(${1 + clamp01(p / 0.12) * 0.15})` }}>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', opacity: 1 - intro, transform: `scale(${1 + intro * 0.15})`, transition: 'opacity .3s' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#c6f24e', color: '#0b0c0a', padding: '14px 22px', font: `600 clamp(15px,1.3vw,18px)/1 ${mono}`, whiteSpace: 'nowrap' }}>
               <span style={{ display: 'inline-block', animation: 'jmBounce 1.2s ease-in-out infinite' }}>↓</span>{t.dScroll}
             </div>
