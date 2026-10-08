@@ -157,7 +157,9 @@ export default class Terminal extends Component {
         return this.out(`cat: ${a || '?'}: No such file or directory`, 'err');
       case 'projects': case 'cd': return this.projects();
       case 'open': return this.open(a);
-      case 'curl': case 'http': case 'httpie': return this.curl(a);
+      case 'curl': case 'http': case 'httpie':
+        if (/-x\s*delete\b/.test(a)) return this.curlDelete(args);
+        return this.curl(a);
       case 'ps': return this.ps();
       case 'kill': case 'pkill': case 'killall': return this.kill(args);
       case 'systemctl': return this.systemctl(a);
@@ -223,6 +225,19 @@ export default class Terminal extends Component {
     this.out('<', 'dim');
     await this.many(r.res, 'acc', 35);
     this.out('', 'fg', { href: this.url(k), linkText: `→ ${k} ${S.open}` });
+  }
+
+  async curlDelete(args) {
+    const es = this.lang() === 'es';
+    const path = args.filter(x => !x.startsWith('-') && x.toLowerCase() !== 'delete').pop() || '/jorge';
+    const p = '/' + path.replace(/^https?:\/\/[^/]+/, '').replace(/^\/+/, '');
+    await this.many([`> DELETE ${p} HTTP/1.1`, '> Host: localhost:8000', '>'], 'dim', 45);
+    await this.w(300);
+    this.out('< HTTP/1.1 405 Method Not Allowed', 'err');
+    this.out('< allow: GET, POST', 'dim');
+    this.out('<', 'dim');
+    await this.many(['{', `  "detail": "${es ? 'jorge no se puede borrar' : 'jorge cannot be deleted'}",`, `  "hint": "${es ? 'prueba con POST /hola' : 'try POST /hello'}"`, '}'], 'acc', 35);
+    unlock('delete');
   }
 
   async ps() {
