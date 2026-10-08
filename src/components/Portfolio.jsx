@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { config } from '../config.js';
 import Hero from './Hero.jsx';
+import About from './About.jsx';
 import Projects from './Projects.jsx';
 import SideProjects from './SideProjects.jsx';
 import Stack from './Stack.jsx';
@@ -67,6 +68,9 @@ export default function Portfolio() {
 
       <section data-screen-label="Hero" style={{ position: 'relative' }}>
         <Hero lang={lang} />
+      </section>
+      <section data-screen-label="About" style={sectionBorder}>
+        <About lang={lang} />
       </section>
       <section data-screen-label="Projects" style={sectionBorder}>
         <Projects lang={lang} {...links} />
