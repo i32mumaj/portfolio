@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { config } from '../config.js';
 import Hero from './Hero.jsx';
 import About from './About.jsx';
@@ -7,7 +7,7 @@ import SideProjects from './SideProjects.jsx';
 import Stack from './Stack.jsx';
 import Contact from './Contact.jsx';
 import Terminal from './Terminal.jsx';
-import { AchievementToasts } from './Easter.jsx';
+import { AchievementToasts, Segfault } from './Easter.jsx';
 import { useEasterEggs } from '../lib/useEasterEggs.js';
 import { unlock } from '../lib/achievements.js';
 
@@ -67,10 +67,12 @@ export default function Portfolio() {
   const [gg, setGg] = useState(false);
   const [root, setRoot] = useState(false);
   const [toast, setToast] = useState(false);
+  const [segv, setSegv] = useState(false);
   const openRef = useRef(open);
 
   useEffect(() => { openRef.current = open; }, [open]);
-  useEasterEggs();
+  useEasterEggs(() => setSegv(true));
+  const endSegv = useCallback(() => setSegv(false), []);
 
   useEffect(() => {
     const onKey = e => {
@@ -169,6 +171,7 @@ export default function Portfolio() {
       </section>
 
       {gg && <GGRain />}
+      {segv && <Segfault lang={lang} onDone={endSegv} />}
       <AchievementToasts lang={lang} lift={root} />
       {root && (
         <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 125, background: '#c6f24e', color: '#0b0c0a', padding: '10px 5vw', font: "600 14px/1.2 'Geist Mono',monospace", display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
