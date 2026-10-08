@@ -14,6 +14,9 @@ const SECTIONS = {
   es: { about: 'SOBRE MÍ', projects: 'PROYECTOS', side: 'SIDE QUESTS', stack: 'STACK', contact: 'CONTACTO' },
   en: { about: 'ABOUT ME', projects: 'PROJECTS', side: 'SIDE QUESTS', stack: 'STACK', contact: 'CONTACT' },
 };
+const ROOT_FILTER = 'grayscale(1) sepia(1) hue-rotate(68deg) saturate(4.5) brightness(1.05)';
+const GG = ['01110', '10001', '10000', '10111', '10001', '10001', '01110'];
+const HEX = '0123456789ABCDEF';
 
 function SectionHeader({ n, label }) {
   const num = { font: "400 44px/1 'VT323',monospace" };
@@ -27,6 +30,29 @@ function SectionHeader({ n, label }) {
   );
 }
 
+// Hex rain that settles into "GG" spelled with 4s and 7s.
+function GGRain() {
+  const [gt, setGt] = useState(0);
+  useEffect(() => {
+    const t0 = performance.now();
+    const iv = setInterval(() => setGt((performance.now() - t0) / 1000), 70);
+    return () => clearInterval(iv);
+  }, []);
+  const cells = [];
+  for (let y = 0; y < 7; y++) for (let x = 0; x < 15; x++) {
+    const gx = x >= 2 && x <= 6 ? x - 2 : x >= 8 && x <= 12 ? x - 8 : -1, on = gx >= 0 && GG[y][gx] === '1';
+    const seed = (x * 31 + y * 17) % 97, lock = 0.8 + (seed / 97) * 2, r = Math.floor((gt * 14 + seed * 3) % 256), locked = on && gt > lock;
+    cells.push({ ch: locked ? '47'[(x + y) % 2] : HEX[r >> 4], op: locked ? 1 : on && gt > lock - 0.3 ? 0.7 : gt > 3.4 ? 0.08 : 0.15 + (r % 5) / 20 });
+  }
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 130, background: 'rgba(11,12,10,.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(15,1fr)', gap: '4px 0', width: 'min(900px,92vw)', font: "400 clamp(28px,4.4vw,60px)/1 'VT323',monospace", textAlign: 'center', color: '#c6f24e' }}>
+        {cells.map((c, i) => <span key={i} style={{ opacity: c.op }}>{c.ch}</span>)}
+      </div>
+    </div>
+  );
+}
+
 export default function Portfolio() {
   const [lang, setLang] = useState('es');
   const [open, setOpen] = useState(false);
@@ -35,6 +61,8 @@ export default function Portfolio() {
   const [idle, setIdle] = useState(true);
   const [y, setY] = useState(0);
   const [tick, setTick] = useState(0);
+  const [gg, setGg] = useState(false);
+  const [root, setRoot] = useState(false);
   const openRef = useRef(open);
 
   useEffect(() => { openRef.current = open; }, [open]);
@@ -56,6 +84,15 @@ export default function Portfolio() {
     };
     const onMove = e => setNear(e.clientY < 120);
     const blink = setInterval(() => setTick(t => t + 1), 530);
+    let ggT;
+    const onWin = () => {
+      setOpen(false);
+      setGg(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      clearTimeout(ggT);
+      ggT = setTimeout(() => { setGg(false); setRoot(true); document.documentElement.style.filter = ROOT_FILTER; }, 5200);
+    };
+    window.addEventListener('jm-snake-win', onWin);
     window.addEventListener('keydown', onKey);
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('mousemove', onMove);
@@ -65,6 +102,9 @@ export default function Portfolio() {
       window.removeEventListener('mousemove', onMove);
       clearInterval(blink);
       clearTimeout(idleT);
+      clearTimeout(ggT);
+      window.removeEventListener('jm-snake-win', onWin);
+      document.documentElement.style.filter = '';
     };
   }, []);
 
@@ -107,6 +147,13 @@ export default function Portfolio() {
         <SectionHeader n="06" label={sec.contact} />
         <Contact lang={lang} email={config.email} />
       </section>
+
+      {gg && <GGRain />}
+      {root && (
+        <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 125, background: '#c6f24e', color: '#0b0c0a', padding: '10px 5vw', font: "600 14px/1.2 'Geist Mono',monospace", display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <span>root@jorge:~#</span><span>{lang === 'es' ? 'modo root · recarga la página para salir' : 'root mode · reload the page to exit'}</span>
+        </div>
+      )}
 
       <div data-nohijack="1" style={{ position: 'fixed', left: 0, right: 0, top: 0, height: '72vh', zIndex: 110, transform: `translateY(${open ? '0%' : 'calc(-100% - 4px)'})`, transition: 'transform .45s cubic-bezier(.2,.8,.2,1)', background: '#0b0c0a', borderBottom: '2px solid #c6f24e', boxShadow: '0 20px 60px rgba(0,0,0,.6)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 130px 0 5vw', font: "500 11px/1 'Geist Mono',monospace", color: '#c6f24e' }}>

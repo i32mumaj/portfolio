@@ -317,8 +317,10 @@ export default class Terminal extends Component {
     const S = this.S();
     this.setState({ snake: false, busy: false });
     this.out(`score ${g.sc} · ${S.cleared}`, 'acc');
+    this.out('achievement unlocked: root', 'ok');
     this.focus();
     if (this._snakeDone) { this._snakeDone(); this._snakeDone = null; }
+    setTimeout(() => window.dispatchEvent(new CustomEvent('jm-snake-win')), 600);
   }
 
   snakeEnd() {
