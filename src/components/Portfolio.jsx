@@ -63,6 +63,7 @@ export default function Portfolio() {
   const [tick, setTick] = useState(0);
   const [gg, setGg] = useState(false);
   const [root, setRoot] = useState(false);
+  const [toast, setToast] = useState(false);
   const openRef = useRef(open);
 
   useEffect(() => { openRef.current = open; }, [open]);
@@ -84,16 +85,22 @@ export default function Portfolio() {
     };
     const onMove = e => setNear(e.clientY < 120);
     const blink = setInterval(() => setTick(t => t + 1), 530);
-    let ggT;
+    let ggT, toastT;
     const onWin = () => {
       setOpen(false);
       setGg(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       clearTimeout(ggT);
-      ggT = setTimeout(() => { setGg(false); setRoot(true); document.documentElement.style.filter = ROOT_FILTER; }, 5200);
+      ggT = setTimeout(() => {
+        setGg(false); setRoot(true); setToast(true);
+        document.documentElement.style.filter = ROOT_FILTER;
+        clearTimeout(toastT);
+        toastT = setTimeout(() => setToast(false), 12000);
+      }, 5200);
     };
     const onHire = () => {
       setOpen(false);
+      setToast(false);
       const el = document.getElementById('contacto');
       if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
     };
@@ -109,6 +116,7 @@ export default function Portfolio() {
       clearInterval(blink);
       clearTimeout(idleT);
       clearTimeout(ggT);
+      clearTimeout(toastT);
       window.removeEventListener('jm-snake-win', onWin);
       window.removeEventListener('jm-hire', onHire);
       document.documentElement.style.filter = '';
@@ -159,6 +167,16 @@ export default function Portfolio() {
       {root && (
         <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 125, background: '#c6f24e', color: '#0b0c0a', padding: '10px 5vw', font: "600 14px/1.2 'Geist Mono',monospace", display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <span>root@jorge:~#</span><span>{lang === 'es' ? 'modo root · recarga la página para salir' : 'root mode · reload the page to exit'}</span>
+        </div>
+      )}
+
+      {toast && (
+        <div style={{ position: 'fixed', left: '50%', bottom: 64, transform: 'translateX(-50%)', zIndex: 126, display: 'flex', alignItems: 'center', gap: 14, maxWidth: 'calc(100vw - 32px)', background: '#0b0c0a', border: '2px solid #c6f24e', boxShadow: '6px 6px 0 #c6f24e', padding: '14px 16px', font: "500 13px/1.4 'Geist Mono',monospace", color: '#f3efe6' }}>
+          <button onClick={() => { setToast(false); setOpen(true); }} style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', background: 'transparent', border: 0, padding: 0, cursor: 'pointer', color: 'inherit', font: 'inherit', textAlign: 'left' }}>
+            <span style={{ color: '#c6f24e' }}>{lang === 'es' ? '🔓 comando desbloqueado' : '🔓 command unlocked'}</span>
+            <span>{lang === 'es' ? 'abre la terminal (º) y escribe ' : 'open the terminal (º) and type '}<span style={{ background: '#c6f24e', color: '#0b0c0a', padding: '2px 6px' }}>hire jorge</span></span>
+          </button>
+          <button onClick={() => setToast(false)} aria-label="close" style={{ background: 'transparent', border: 0, color: '#c6f24e', cursor: 'pointer', font: "400 22px/1 'Geist Mono',monospace", padding: 4 }}>✕</button>
         </div>
       )}
 
