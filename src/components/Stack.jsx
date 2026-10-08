@@ -68,7 +68,6 @@ export default function Stack({ lang }) {
       <div style={{ maxWidth: 1180, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 36 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ font: `500 12px/1 ${mono}`, color: '#c6f24e' }}>04 — stack</div>
             <h2 style={{ margin: 0, font: "400 clamp(52px,7.5vw,116px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>pip install <span style={{ fontStyle: 'italic' }}>jorge</span></h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start', maxWidth: 380 }}>

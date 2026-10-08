@@ -9,6 +9,23 @@ import Contact from './Contact.jsx';
 import Terminal from './Terminal.jsx';
 
 const sectionBorder = { position: 'relative', borderTop: '1px solid rgba(198,242,78,.25)' };
+const TOTAL = '06';
+const SECTIONS = {
+  es: { about: 'SOBRE MÍ', projects: 'PROYECTOS', side: 'SIDE QUESTS', stack: 'STACK', contact: 'CONTACTO' },
+  en: { about: 'ABOUT ME', projects: 'PROJECTS', side: 'SIDE QUESTS', stack: 'STACK', contact: 'CONTACT' },
+};
+
+function SectionHeader({ n, label }) {
+  const num = { font: "400 44px/1 'VT323',monospace" };
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '56px 5vw 0', color: '#c6f24e' }}>
+      <span style={num}>{n}</span>
+      <span style={{ font: "600 22px/1 'Geist Mono',monospace", letterSpacing: '.06em' }}>{label}</span>
+      <span style={{ flex: 1, height: 3, background: '#c6f24e' }} />
+      <span style={{ ...num, opacity: 0.6 }}>{n}/{TOTAL}</span>
+    </div>
+  );
+}
 
 export default function Portfolio() {
   const [lang, setLang] = useState('es');
@@ -54,6 +71,7 @@ export default function Portfolio() {
   const inHero = y < window.innerHeight * 0.9;
   const ext = !inHero && (hov || near || idle);
   const toggle = () => setOpen(o => !o);
+  const sec = SECTIONS[lang] || SECTIONS.es;
   const links = { brevUrl: config.brevUrl, slateUrl: config.slateUrl, latchUrl: config.latchUrl };
 
   return (
@@ -70,18 +88,23 @@ export default function Portfolio() {
         <Hero lang={lang} />
       </section>
       <section data-screen-label="About" style={sectionBorder}>
+        <SectionHeader n="02" label={sec.about} />
         <About lang={lang} />
       </section>
       <section data-screen-label="Projects" style={sectionBorder}>
+        <SectionHeader n="03" label={sec.projects} />
         <Projects lang={lang} {...links} />
       </section>
       <section data-screen-label="Side projects" style={sectionBorder}>
+        <SectionHeader n="04" label={sec.side} />
         <SideProjects lang={lang} />
       </section>
       <section data-screen-label="Stack" style={sectionBorder}>
+        <SectionHeader n="05" label={sec.stack} />
         <Stack lang={lang} />
       </section>
       <section data-screen-label="Contact" style={sectionBorder}>
+        <SectionHeader n="06" label={sec.contact} />
         <Contact lang={lang} email={config.email} />
       </section>
 

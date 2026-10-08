@@ -26,8 +26,8 @@ const PROJ = [
 ];
 
 const T = {
-  es: { kicker: 'otros proyectos', title: 'Side quests', intro: 'Proyectos de la carrera y de cursos: de mi primera app en C++ a plataformas web completas.', repo: 'ver repo', hint: 'click en la carta de arriba = pop() · pasa el ratón para abrir el abanico' },
-  en: { kicker: 'other projects', title: 'Side quests', intro: 'University and course projects: from my first C++ app to full web platforms.', repo: 'view repo', hint: 'click the top card = pop() · hover to fan the deck' },
+  es: { title: 'Side quests', intro: 'Proyectos de la carrera y de cursos: de mi primera app en C++ a plataformas web completas.', repo: 'ver repo', hint: 'click en la carta de arriba = pop() · pasa el ratón para abrir el abanico' },
+  en: { title: 'Side quests', intro: 'University and course projects: from my first C++ app to full web platforms.', repo: 'view repo', hint: 'click the top card = pop() · hover to fan the deck' },
 };
 
 const N = PROJ.length;
@@ -81,7 +81,6 @@ export default function SideProjects({ lang }) {
     <div style={{ background: '#0b0c0a', color: '#f3efe6', padding: '96px 5vw 120px', display: 'flex', flexDirection: 'column', gap: 48, minHeight: '100vh' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ font: `500 12px/1 ${mono}`, color: '#c6f24e', letterSpacing: '.06em' }}>03.1 — {t.kicker}</div>
           <h2 style={{ margin: 0, font: "400 clamp(48px,6.5vw,104px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>{t.title}</h2>
         </div>
         <div style={{ font: `400 13px/1.5 ${mono}`, color: 'rgba(243,239,230,.65)', maxWidth: 380 }}>{t.intro}</div>

@@ -4,7 +4,7 @@ import { hash, wait } from '../lib/util.js';
 
 const T = {
   es: {
-    kicker: 'proyectos', title: 'jorge/docs', intro: 'Cada proyecto documentado como en FastAPI. Ejecuta un endpoint y la demo de al lado responde de verdad.',
+    title: 'jorge/docs', intro: 'Cada proyecto documentado como en FastAPI. Ejecuta un endpoint y la demo de al lado responde de verdad.',
     brevDesc: 'Acortador de enlaces. Recibe una URL, genera un código corto y redirige con un 307.',
     slateDesc: 'Gastos en grupo al estilo Tricount: apuntas quién paga y calcula cuánto debe cada uno y cómo saldar con el mínimo de transferencias.',
     latchDesc: 'Gestor de contraseñas zero-knowledge: se cifra todo en tu navegador y el servidor solo guarda texto cifrado.',
@@ -15,7 +15,7 @@ const T = {
     concepts: ['cena', 'súper', 'gasolina', 'entradas', 'pizza', 'luz'], settled: 'todo cuadrado ✓',
   },
   en: {
-    kicker: 'projects', title: 'jorge/docs', intro: 'Each project documented the FastAPI way. Run an endpoint and the demo next to it actually responds.',
+    title: 'jorge/docs', intro: 'Each project documented the FastAPI way. Run an endpoint and the demo next to it actually responds.',
     brevDesc: 'Link shortener. Takes a URL, generates a short code and redirects with a 307.',
     slateDesc: 'Tricount-style group expenses: log who paid and it works out what everyone owes and how to settle with the fewest transfers.',
     latchDesc: 'Zero-knowledge password manager: everything is encrypted in your browser and the server only stores ciphertext.',
@@ -279,7 +279,6 @@ export default class Projects extends Component {
       <div style={{ background: '#0b0c0a', color: '#f3efe6', padding: '96px 5vw 120px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, flexWrap: 'wrap', paddingBottom: 40 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ font: `500 12px/1 ${mono}`, color: '#c6f24e', letterSpacing: '.06em' }}>03 — {t.kicker}</div>
             <h2 style={{ margin: 0, font: "400 clamp(56px,8vw,128px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>{t.title}</h2>
           </div>
           <div style={{ font: `400 13px/1.5 ${mono}`, color: 'rgba(243,239,230,.65)', maxWidth: 380 }}>{t.intro}</div>

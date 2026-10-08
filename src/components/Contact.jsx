@@ -3,13 +3,13 @@ import { GITHUB_URL } from '../config.js';
 
 const T = {
   es: {
-    kicker: 'contacto', intro: 'Escribe aquí y te abro tu cliente de correo con el mensaje ya redactado. Si no usas ninguno, copia mi dirección.',
+    intro: 'Escribe aquí y te abro tu cliente de correo con el mensaje ya redactado. Si no usas ninguno, copia mi dirección.',
     name: 'tu nombre', subject: 'asunto', body: 'mensaje', namePh: 'Ada Lovelace', subjectPh: 'Portfolio · tu nombre', bodyPh: 'Hola Jorge, ...',
     draft: 'borrador', open: 'abrir en mi correo ↗', copy: 'copiar email', copied: 'copiado ✓', empty: 'escribe algo primero',
     opened: 'abriendo tu cliente de correo…', orDirect: 'o directamente:', noMail: 'aún no hay email configurado',
   },
   en: {
-    kicker: 'contact', intro: "Write here and I'll open your mail client with the message ready to go. If you don't use one, copy my address.",
+    intro: "Write here and I'll open your mail client with the message ready to go. If you don't use one, copy my address.",
     name: 'your name', subject: 'subject', body: 'message', namePh: 'Ada Lovelace', subjectPh: 'Portfolio · your name', bodyPh: 'Hi Jorge, ...',
     draft: 'draft', open: 'open in my mail ↗', copy: 'copy email', copied: 'copied ✓', empty: 'write something first',
     opened: 'opening your mail client…', orDirect: 'or directly:', noMail: 'no email set yet',
@@ -58,7 +58,6 @@ export default function Contact({ lang, email: myEmail }) {
       <div style={{ maxWidth: 1180, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 36 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ font: `500 12px/1 ${mono}`, color: '#c6f24e' }}>05 — {t.kicker}</div>
             <h2 style={{ margin: 0, font: "400 clamp(56px,8vw,128px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>
               mailto:<span style={{ fontStyle: 'italic' }}>jorge</span>
             </h2>
