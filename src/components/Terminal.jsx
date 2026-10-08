@@ -92,7 +92,7 @@ export default class Terminal extends Component {
     window.removeEventListener('keydown', this._key);
   }
 
-  componentDidUpdate(pp) {
+  componentDidUpdate(pp, ps) {
     const L = this.lang();
     if (this._lastL && L !== this._lastL && this._booted) {
       this._lastL = L;
@@ -104,6 +104,9 @@ export default class Terminal extends Component {
       if (!this._booted) { this._booted = true; this.boot(); }
       this.focus();
     }
+    // Only follow new output; the parent re-renders constantly (caret blink, scroll) and must not yank the view down.
+    const s = this.state;
+    if (s.lines === ps.lines && s.input === ps.input && s.snake === ps.snake && s.busy === ps.busy) return;
     const el = this.scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }
