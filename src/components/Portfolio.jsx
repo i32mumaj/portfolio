@@ -92,7 +92,13 @@ export default function Portfolio() {
       clearTimeout(ggT);
       ggT = setTimeout(() => { setGg(false); setRoot(true); document.documentElement.style.filter = ROOT_FILTER; }, 5200);
     };
+    const onHire = () => {
+      setOpen(false);
+      const el = document.getElementById('contacto');
+      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
+    };
     window.addEventListener('jm-snake-win', onWin);
+    window.addEventListener('jm-hire', onHire);
     window.addEventListener('keydown', onKey);
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('mousemove', onMove);
@@ -104,6 +110,7 @@ export default function Portfolio() {
       clearTimeout(idleT);
       clearTimeout(ggT);
       window.removeEventListener('jm-snake-win', onWin);
+      window.removeEventListener('jm-hire', onHire);
       document.documentElement.style.filter = '';
     };
   }, []);
@@ -143,7 +150,7 @@ export default function Portfolio() {
         <SectionHeader n="05" label={sec.stack} />
         <Stack lang={lang} />
       </section>
-      <section data-screen-label="Contact" style={sectionBorder}>
+      <section id="contacto" data-screen-label="Contact" style={sectionBorder}>
         <SectionHeader n="06" label={sec.contact} />
         <Contact lang={lang} email={config.email} />
       </section>

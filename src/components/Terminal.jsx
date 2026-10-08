@@ -14,7 +14,7 @@ const S = {
     segHint: '// por eso ahora escribo Python.', sudoNo: 'visitor is not in the sudoers file. This incident will be reported.',
     sudoYes: 'vale, tú ganas. acceso root concedido.', sudoHint: "pista: ahora prueba 'rm -rf /'", rmNo: 'rm: permiso denegado (prueba sudo primero)',
     rmJoke: '…es broma. Todo sigue en su sitio.', exit: 'no puedes irte todavía. escribe projects.', snakeHelp: 'snake — flechas / WASD · q para salir · llena el tablero para ganar',
-    over: 'game over · puntos', record: 'nuevo récord', cleared: 'tablero lleno', pyHint: 'aquí no hay intérprete de Python, pero mis APIs sí lo usan: prueba curl brev.',
+    over: 'game over · puntos', record: 'nuevo récord', cleared: 'tablero lleno', unlocked: 'nuevo comando disponible:', hiring: '→ abriendo contacto con el mensaje escrito…', pyHint: 'aquí no hay intérprete de Python, pero mis APIs sí lo usan: prueba curl brev.',
     boot: ['JM-BIOS v4.0  (c) 2026', 'memory test ............ 16384K OK', 'mounting /home/jorge .... ok', 'starting uvicorn ........ ok', '', 'Jorge Muñiz — Backend Engineer (Python)', "escribe 'help' o pulsa un comando de abajo."],
   },
   en: {
@@ -27,7 +27,7 @@ const S = {
     segHint: "// that's why I write Python now.", sudoNo: 'visitor is not in the sudoers file. This incident will be reported.',
     sudoYes: 'fine, you win. root access granted.', sudoHint: "hint: now try 'rm -rf /'", rmNo: 'rm: permission denied (try sudo first)',
     rmJoke: '…just kidding. Everything is still there.', exit: "you can't leave yet. type projects.", snakeHelp: 'snake — arrows / WASD · q to quit · fill the board to win',
-    over: 'game over · score', record: 'new record', cleared: 'board cleared', pyHint: 'no Python interpreter here, but my APIs run on it: try curl brev.',
+    over: 'game over · score', record: 'new record', cleared: 'board cleared', unlocked: 'new command available:', hiring: '→ opening contact with the message ready…', pyHint: 'no Python interpreter here, but my APIs run on it: try curl brev.',
     boot: ['JM-BIOS v4.0  (c) 2026', 'memory test ............ 16384K OK', 'mounting /home/jorge .... ok', 'starting uvicorn ........ ok', '', 'Jorge Muñiz — Backend Engineer (Python)', "type 'help' or click a command below."],
   },
 };
@@ -154,6 +154,11 @@ export default class Terminal extends Component {
       case './jorge': case './a.out':
         this.out('hola, soy Jorge Muñiz', 'ok'); await this.w(500); this.out('Segmentation fault (core dumped)', 'err'); return;
       case 'snake': return this.startSnake();
+      case 'hire':
+        if (!this._won || !a.startsWith('jorge')) return this.out(`${c0}: ${S.nf}. ${S.tryHelp}`, 'err');
+        this.out(S.hiring, 'dim');
+        setTimeout(() => window.dispatchEvent(new CustomEvent('jm-hire')), 700);
+        return;
       case 'sudo': return this.sudo();
       case 'su': return this.sudo();
       case 'rm': return this.rm(a);
@@ -318,6 +323,9 @@ export default class Terminal extends Component {
     this.setState({ snake: false, busy: false });
     this.out(`score ${g.sc} · ${S.cleared}`, 'acc');
     this.out('achievement unlocked: root', 'ok');
+    this.out(S.unlocked, 'dim');
+    this.out('  hire jorge', 'acc');
+    this._won = true;
     this.focus();
     if (this._snakeDone) { this._snakeDone(); this._snakeDone = null; }
     setTimeout(() => window.dispatchEvent(new CustomEvent('jm-snake-win')), 600);

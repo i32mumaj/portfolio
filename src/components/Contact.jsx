@@ -5,13 +5,13 @@ const T = {
   es: {
     intro: 'Escribe aquí y te abro tu cliente de correo con el mensaje ya redactado. Si no usas ninguno, copia mi dirección.',
     name: 'tu nombre', subject: 'asunto', body: 'mensaje', namePh: 'Ada Lovelace', subjectPh: 'Portfolio · tu nombre', bodyPh: 'Hola Jorge, ...',
-    draft: 'borrador', open: 'abrir en mi correo ↗', copy: 'copiar email', copied: 'copiado ✓', empty: 'escribe algo primero',
+    hireMsg: 'He llenado el tablero del snake y quiero hablar contigo.', draft: 'borrador', open: 'abrir en mi correo ↗', copy: 'copiar email', copied: 'copiado ✓', empty: 'escribe algo primero',
     opened: 'abriendo tu cliente de correo…', orDirect: 'o directamente:', noMail: 'aún no hay email configurado',
   },
   en: {
     intro: "Write here and I'll open your mail client with the message ready to go. If you don't use one, copy my address.",
     name: 'your name', subject: 'subject', body: 'message', namePh: 'Ada Lovelace', subjectPh: 'Portfolio · your name', bodyPh: 'Hi Jorge, ...',
-    draft: 'draft', open: 'open in my mail ↗', copy: 'copy email', copied: 'copied ✓', empty: 'write something first',
+    hireMsg: 'I cleared the snake board and I want to talk to you.', draft: 'draft', open: 'open in my mail ↗', copy: 'copy email', copied: 'copied ✓', empty: 'write something first',
     opened: 'opening your mail client…', orDirect: 'or directly:', noMail: 'no email set yet',
   },
 };
@@ -30,6 +30,12 @@ export default function Contact({ lang, email: myEmail }) {
   const timer = useRef();
 
   useEffect(() => () => clearTimeout(timer.current), []);
+
+  useEffect(() => {
+    const onHire = () => setMsg(t.hireMsg);
+    window.addEventListener('jm-hire', onHire);
+    return () => window.removeEventListener('jm-hire', onHire);
+  }, [t]);
 
   const flash = s => {
     setStatus(s);
