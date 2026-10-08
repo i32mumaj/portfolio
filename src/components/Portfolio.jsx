@@ -7,6 +7,9 @@ import SideProjects from './SideProjects.jsx';
 import Stack from './Stack.jsx';
 import Contact from './Contact.jsx';
 import Terminal from './Terminal.jsx';
+import { AchievementToasts } from './Easter.jsx';
+import { useEasterEggs } from '../lib/useEasterEggs.js';
+import { unlock } from '../lib/achievements.js';
 
 const sectionBorder = { position: 'relative', borderTop: '1px solid rgba(198,242,78,.25)' };
 const TOTAL = '06';
@@ -67,6 +70,7 @@ export default function Portfolio() {
   const openRef = useRef(open);
 
   useEffect(() => { openRef.current = open; }, [open]);
+  useEasterEggs();
 
   useEffect(() => {
     const onKey = e => {
@@ -127,13 +131,14 @@ export default function Portfolio() {
   const ext = !inHero && (hov || near || idle);
   const toggle = () => setOpen(o => !o);
   const sec = SECTIONS[lang] || SECTIONS.es;
+  const pick = id => { if (id === 'en') unlock('english'); setLang(id); };
   const links = { brevUrl: config.brevUrl, slateUrl: config.slateUrl, latchUrl: config.latchUrl };
 
   return (
     <div style={{ background: '#0b0c0a' }}>
       <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 120, display: 'flex', gap: 2, padding: 3, background: '#0b0c0a', border: '1px solid rgba(198,242,78,.4)', font: "500 11px/1 'Geist Mono',monospace" }}>
         {['es', 'en'].map(id => (
-          <button key={id} onClick={() => setLang(id)} style={{ border: 0, cursor: 'pointer', padding: '7px 9px', background: lang === id ? '#c6f24e' : 'transparent', color: lang === id ? '#0b0c0a' : '#c6f24e', font: 'inherit' }}>
+          <button key={id} onClick={() => pick(id)} style={{ border: 0, cursor: 'pointer', padding: '7px 9px', background: lang === id ? '#c6f24e' : 'transparent', color: lang === id ? '#0b0c0a' : '#c6f24e', font: 'inherit' }}>
             {id.toUpperCase()}
           </button>
         ))}
@@ -164,6 +169,7 @@ export default function Portfolio() {
       </section>
 
       {gg && <GGRain />}
+      <AchievementToasts lang={lang} lift={root} />
       {root && (
         <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 125, background: '#c6f24e', color: '#0b0c0a', padding: '10px 5vw', font: "600 14px/1.2 'Geist Mono',monospace", display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <span>root@jorge:~#</span><span>{lang === 'es' ? 'modo root · recarga la página para salir' : 'root mode · reload the page to exit'}</span>

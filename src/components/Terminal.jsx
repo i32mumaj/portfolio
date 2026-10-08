@@ -1,11 +1,12 @@
 import { Component, createRef } from 'react';
 import { GITHUB_URL } from '../config.js';
+import { ACHIEVEMENTS, FINAL, isUnlocked, resetAchievements, unlock, unlockedCount } from '../lib/achievements.js';
 
 const PAL = { fg: 'oklch(0.88 0.1 125)', dim: 'oklch(0.64 0.07 125)', acc: '#c6f24e', ok: '#f3efe6', err: 'oklch(0.72 0.19 35)' };
 
 const S = {
   es: {
-    help: ['comandos:', '  whoami            quién soy', '  projects          mis proyectos (con enlace)', '  open <proyecto>   abrir brev | slate | latch', '  curl <proyecto>   llamar a su API (simulado)', '  gcc main.c        compilar como en los viejos tiempos', '  snake             ya sabes', '  cat about.txt     sobre mí', '  sudo …            inténtalo', '  clear · history · lang en · date'],
+    help: ['comandos:', '  whoami            quién soy', '  projects          mis proyectos (con enlace)', '  open <proyecto>   abrir brev | slate | latch', '  curl <proyecto>   llamar a su API (simulado)', '  gcc main.c        compilar como en los viejos tiempos', '  snake             ya sabes', '  cat about.txt     sobre mí', '  sudo …            inténtalo', '  achievements      logros ocultos', '  clear · history · lang en · date'],
     who: ['Jorge Muñiz — Backend Engineer', '4º de Ingeniería Informática.', 'Empecé con C y C++. Ahora me especializo en backend con Python: FastAPI, SQLAlchemy.'],
     about: ['# about.txt', 'Me gusta entender qué pasa por debajo: memoria, punteros, syscalls.', 'Eso lo aprendí con C/C++. Ahora lo aplico diseñando APIs en Python.', 'Stack actual: Python · FastAPI · SQLAlchemy · SQLite · React (front).'],
     brev: 'Acortador de enlaces', slate: 'Gastos en grupo, quién debe cuánto', latch: 'Gestor de contraseñas zero-knowledge',
@@ -18,7 +19,7 @@ const S = {
     boot: ['JM-BIOS v4.0  (c) 2026', 'memory test ............ 16384K OK', 'mounting /home/jorge .... ok', 'starting uvicorn ........ ok', '', 'Jorge Muñiz — Backend Engineer (Python)', "escribe 'help' o pulsa un comando de abajo."],
   },
   en: {
-    help: ['commands:', '  whoami            who I am', '  projects          my projects (with links)', '  open <project>    open brev | slate | latch', '  curl <project>    call its API (simulated)', '  gcc main.c        compile like the old days', '  snake             you know', '  cat about.txt     about me', '  sudo …            give it a try', '  clear · history · lang es · date'],
+    help: ['commands:', '  whoami            who I am', '  projects          my projects (with links)', '  open <project>    open brev | slate | latch', '  curl <project>    call its API (simulated)', '  gcc main.c        compile like the old days', '  snake             you know', '  cat about.txt     about me', '  sudo …            give it a try', '  achievements      hidden achievements', '  clear · history · lang es · date'],
     who: ['Jorge Muñiz — Backend Engineer', '4th year, Computer Engineering.', 'Started with C and C++. Now specialising in Python backend: FastAPI, SQLAlchemy.'],
     about: ['# about.txt', 'I like knowing what happens underneath: memory, pointers, syscalls.', 'C/C++ taught me that. Now I apply it designing APIs in Python.', 'Current stack: Python · FastAPI · SQLAlchemy · SQLite · React (front).'],
     brev: 'Link shortener', slate: 'Group expenses, who owes whom', latch: 'Zero-knowledge password manager',
@@ -38,8 +39,8 @@ const API = {
   latch: { m: 'GET', path: '/api/vault/items', st: '200 OK', res: ['{', '  "items": [', '    {"id": 1, "ciphertext": "9f3a…c21e", "nonce": "b81d…"},', '    {"id": 2, "ciphertext": "44e0…7a9b", "nonce": "0c3f…"}', '  ],', '  "server_knows_master_key": false', '}'] },
 };
 
-const CHIPS = ['help', 'whoami', 'projects', 'curl brev', 'curl slate', 'curl latch', 'gcc main.c', 'snake', 'sudo su'];
-const COMPLETIONS = ['help', 'whoami', 'projects', 'open brev', 'open slate', 'open latch', 'curl brev', 'curl slate', 'curl latch', 'gcc main.c', 'snake', 'sudo su', 'cat about.txt', 'cat main.c', 'clear', 'history', 'rm -rf /'];
+const CHIPS = ['achievements', 'help', 'whoami', 'projects', 'curl brev', 'curl slate', 'curl latch', 'gcc main.c', 'snake', 'sudo su'];
+const COMPLETIONS = ['help', 'whoami', 'projects', 'open brev', 'open slate', 'open latch', 'curl brev', 'curl slate', 'curl latch', 'gcc main.c', 'snake', 'sudo su', 'cat about.txt', 'cat main.c', 'achievements', 'clear', 'history', 'rm -rf /'];
 const C_SRC = ['#include <stdio.h>', '', 'int main(void) {', '    int tiempo_libre = 0;', '    char *name = "Jorge Muñiz";', '    printf("hola, soy %s\\n", name);', '    return *(int *)0;  /* oops */', '}'];
 const PROMPT = 'jorge@portfolio:~$ ';
 const SNAKE_CELL = 2;
@@ -156,6 +157,7 @@ export default class Terminal extends Component {
       case 'projects': case 'cd': return this.projects();
       case 'open': return this.open(a);
       case 'curl': case 'http': case 'httpie': return this.curl(a);
+      case 'achievements': return this.achievements(a);
       case 'gcc': case 'cc': case 'g++': case 'make': case 'clang': return this.gcc();
       case './jorge': case './a.out':
         this.out('hola, soy Jorge Muñiz', 'ok'); await this.w(500); this.out('Segmentation fault (core dumped)', 'err'); return;
@@ -163,6 +165,7 @@ export default class Terminal extends Component {
       case 'hire':
         if (!this._won || !a.startsWith('jorge')) return this.out(`${c0}: ${S.nf}. ${S.tryHelp}`, 'err');
         this.out(S.hiring, 'dim');
+        unlock('hire');
         setTimeout(() => window.dispatchEvent(new CustomEvent('jm-hire')), 700);
         return;
       case 'sudo': return this.sudo();
@@ -173,6 +176,7 @@ export default class Terminal extends Component {
       case 'date': return this.out(new Date().toString());
       case 'history': return this.many(this._hist.map((h, i) => `  ${String(i + 1).padStart(3)}  ${h}`), 'dim', 10);
       case 'lang':
+        if (a === 'en') unlock('english');
         if (a === 'es' || a === 'en') { this.setState({ lang: a, langFrom: this.props.lang }); return this.out(`lang = ${a}`, 'ok'); }
         return this.out('lang es | en', 'dim');
       case 'exit': case 'logout': return this.out(S.exit, 'acc');
@@ -217,6 +221,18 @@ export default class Terminal extends Component {
     this.out('', 'fg', { href: this.url(k), linkText: `→ ${k} ${S.open}` });
   }
 
+  async achievements(a) {
+    const es = this.lang() === 'es', L = es ? 'es' : 'en';
+    if (a === '--reset') { resetAchievements(); return this.out(es ? 'logros borrados.' : 'achievements cleared.', 'dim'); }
+    this.out(`${es ? 'logros' : 'achievements'}: ${unlockedCount()}/${ACHIEVEMENTS.length}`, 'acc');
+    for (const x of ACHIEVEMENTS) {
+      const [title, desc, hint] = x[L], on = isUnlocked(x.id);
+      this.out(on ? `  [x] ${title.padEnd(14)} ${desc}` : `  [ ] ${'???'.padEnd(14)} ${hint}`, on ? 'fg' : 'dim');
+      await this.w(25);
+    }
+    if (isUnlocked(FINAL.id)) this.out(`  ★ ${FINAL[L][0]} · ${FINAL[L][1]}`, 'ok');
+  }
+
   async gcc() {
     const S = this.S();
     this.out('gcc -Wall -O2 main.c -o jorge', 'dim');
@@ -237,6 +253,7 @@ export default class Terminal extends Component {
     await this.w(400);
     if (this._sudo < 3) return this.out(S.sudoNo, 'err');
     this._root = true;
+    unlock('sudo');
     this.out(S.sudoYes, 'ok');
     this.out(S.sudoHint, 'dim');
   }
@@ -251,6 +268,7 @@ export default class Terminal extends Component {
     }
     await this.w(700);
     this.out(S.rmJoke, 'ok');
+    unlock('rmrf');
   }
 
   startSnake(god = false) {
@@ -345,6 +363,8 @@ export default class Terminal extends Component {
     this.out(S.unlocked, 'dim');
     this.out('  hire jorge', 'acc');
     this._won = true;
+    unlock('snake');
+    if (g.god) unlock('cheater');
     this.focus();
     if (this._snakeDone) { this._snakeDone(); this._snakeDone = null; }
     setTimeout(() => window.dispatchEvent(new CustomEvent('jm-snake-win')), 600);
