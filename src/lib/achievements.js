@@ -11,6 +11,7 @@ export const ACHIEVEMENTS = [
   { id: 'delete', es: ['405', 'intentaste borrarme', 'prueba otros métodos HTTP conmigo'], en: ['405', 'tried to delete me', 'try other HTTP methods on me'] },
   { id: 'konami', es: ['Core dumped', 'rompiste la web', '↑ ↑ ↓ ↓ …'], en: ['Core dumped', 'crashed the site', '↑ ↑ ↓ ↓ …'] },
   { id: 'sigstop', es: ['SIGSTOP', 'te fuiste y volviste', 'a veces hay que irse para volver'], en: ['SIGSTOP', 'left and came back', 'sometimes you have to leave to come back'] },
+  { id: 'copy', es: ['Ctrl+C', 'copiaste algo de la web', 'lo bueno se copia'], en: ['Ctrl+C', 'copied something', 'good stuff gets copied'] },
   { id: 'english', es: ['Bilingüe', 'cambiaste el idioma', 'habla otro idioma'], en: ['Bilingual', 'switched language', 'speak another language'] },
   { id: 'eof', es: ['EOF', 'llegaste al final', 'llega hasta abajo del todo'], en: ['EOF', 'reached the end', 'scroll all the way down'] },
 ];
