@@ -13,8 +13,8 @@ const S = {
     nf: 'comando no encontrado', tryHelp: "prueba 'help'", warn: "main.c:4:10: warning: unused variable 'tiempo_libre' [-Wunused-variable]",
     segHint: '// por eso ahora escribo Python.', sudoNo: 'visitor is not in the sudoers file. This incident will be reported.',
     sudoYes: 'vale, tú ganas. acceso root concedido.', sudoHint: "pista: ahora prueba 'rm -rf /'", rmNo: 'rm: permiso denegado (prueba sudo primero)',
-    rmJoke: '…es broma. Todo sigue en su sitio.', exit: 'no puedes irte todavía. escribe projects.', snakeHelp: 'snake — flechas / WASD · q para salir',
-    over: 'game over · puntos', record: 'nuevo récord', pyHint: 'aquí no hay intérprete de Python, pero mis APIs sí lo usan: prueba curl brev.',
+    rmJoke: '…es broma. Todo sigue en su sitio.', exit: 'no puedes irte todavía. escribe projects.', snakeHelp: 'snake — flechas / WASD · q para salir · llena el tablero para ganar',
+    over: 'game over · puntos', record: 'nuevo récord', cleared: 'tablero lleno', pyHint: 'aquí no hay intérprete de Python, pero mis APIs sí lo usan: prueba curl brev.',
     boot: ['JM-BIOS v4.0  (c) 2026', 'memory test ............ 16384K OK', 'mounting /home/jorge .... ok', 'starting uvicorn ........ ok', '', 'Jorge Muñiz — Backend Engineer (Python)', "escribe 'help' o pulsa un comando de abajo."],
   },
   en: {
@@ -26,8 +26,8 @@ const S = {
     nf: 'command not found', tryHelp: "try 'help'", warn: "main.c:4:10: warning: unused variable 'free_time' [-Wunused-variable]",
     segHint: "// that's why I write Python now.", sudoNo: 'visitor is not in the sudoers file. This incident will be reported.',
     sudoYes: 'fine, you win. root access granted.', sudoHint: "hint: now try 'rm -rf /'", rmNo: 'rm: permission denied (try sudo first)',
-    rmJoke: '…just kidding. Everything is still there.', exit: "you can't leave yet. type projects.", snakeHelp: 'snake — arrows / WASD · q to quit',
-    over: 'game over · score', record: 'new record', pyHint: 'no Python interpreter here, but my APIs run on it: try curl brev.',
+    rmJoke: '…just kidding. Everything is still there.', exit: "you can't leave yet. type projects.", snakeHelp: 'snake — arrows / WASD · q to quit · fill the board to win',
+    over: 'game over · score', record: 'new record', cleared: 'board cleared', pyHint: 'no Python interpreter here, but my APIs run on it: try curl brev.',
     boot: ['JM-BIOS v4.0  (c) 2026', 'memory test ............ 16384K OK', 'mounting /home/jorge .... ok', 'starting uvicorn ........ ok', '', 'Jorge Muñiz — Backend Engineer (Python)', "type 'help' or click a command below."],
   },
 };
@@ -280,11 +280,14 @@ export default class Terminal extends Component {
     g.d = g.nd;
     const h = { x: g.s[0].x + g.d.x, y: g.s[0].y + g.d.y };
     const fi = g.f.findIndex(f => f.x === h.x && f.y === h.y);
-    if (h.x < 0 || h.y < 0 || h.x >= g.W || h.y >= g.H || g.s.some(p => p.x === h.x && p.y === h.y)) { this.snakeEnd(); return; }
+    // The tail moves out of the way this tick unless we're growing, so the head may follow it.
+    const body = fi >= 0 ? g.s : g.s.slice(0, -1);
+    if (h.x < 0 || h.y < 0 || h.x >= g.W || h.y >= g.H || body.some(p => p.x === h.x && p.y === h.y)) { this.snakeEnd(); return; }
     g.s.unshift(h);
     if (fi >= 0) {
       g.sc++;
       g.f.splice(fi, 1);
+      if (g.s.length >= g.W * g.H) { this.snakeWin(); return; }
       this.spawnFruit(g);
     } else g.s.pop();
     const el = this.snakeRef.current;
@@ -304,6 +307,18 @@ export default class Terminal extends Component {
     el.textContent = rows.join('\n');
     const sc = this.scrollRef.current;
     if (sc) sc.scrollTop = sc.scrollHeight;
+  }
+
+  snakeWin() {
+    clearInterval(this._sn);
+    const g = this._g;
+    this._g = null;
+    if (!g) return;
+    const S = this.S();
+    this.setState({ snake: false, busy: false });
+    this.out(`score ${g.sc} · ${S.cleared}`, 'acc');
+    this.focus();
+    if (this._snakeDone) { this._snakeDone(); this._snakeDone = null; }
   }
 
   snakeEnd() {
