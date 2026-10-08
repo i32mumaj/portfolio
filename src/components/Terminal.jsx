@@ -280,7 +280,7 @@ export default class Terminal extends Component {
     this.out(`${es ? 'logros' : 'achievements'}: ${unlockedCount()}/${ACHIEVEMENTS.length}`, 'acc');
     for (const x of ACHIEVEMENTS) {
       const [title, desc, hint] = x[L], on = isUnlocked(x.id);
-      this.out(on ? `  [x] ${title.padEnd(14)} ${desc}` : `  [ ] ${'???'.padEnd(14)} ${hint}`, on ? 'fg' : 'dim');
+      this.out(on ? `  [x] ${title.padEnd(14)} ${desc} · ${hint}` : `  [ ] ${'???'.padEnd(14)} ${hint}`, on ? 'fg' : 'dim');
       await this.w(25);
     }
     if (isUnlocked(FINAL.id)) this.out(`  ★ ${FINAL[L][0]} · ${FINAL[L][1]}`, 'ok');
