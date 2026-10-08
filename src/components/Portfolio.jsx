@@ -111,8 +111,8 @@ export default function Portfolio() {
       <div data-nohijack="1" style={{ position: 'fixed', left: 0, right: 0, top: 0, height: '72vh', zIndex: 110, transform: `translateY(${open ? '0%' : 'calc(-100% - 4px)'})`, transition: 'transform .45s cubic-bezier(.2,.8,.2,1)', background: '#0b0c0a', borderBottom: '2px solid #c6f24e', boxShadow: '0 20px 60px rgba(0,0,0,.6)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 130px 0 5vw', font: "500 11px/1 'Geist Mono',monospace", color: '#c6f24e' }}>
           <span>~/jorge — tty1</span>
-          <button onClick={toggle} style={{ background: 'transparent', border: '1px solid rgba(198,242,78,.5)', color: '#c6f24e', padding: '6px 10px', font: 'inherit', cursor: 'pointer' }}>
-            {lang === 'es' ? 'cerrar [esc]' : 'close [esc]'}
+          <button onClick={toggle} className="h-close" style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#c6f24e', border: 0, color: '#0b0c0a', padding: '12px 18px', font: "600 15px/1 'Geist Mono',monospace", cursor: 'pointer' }}>
+            <span style={{ fontSize: 20, lineHeight: 0.8 }}>✕</span>{lang === 'es' ? 'cerrar [esc]' : 'close [esc]'}
           </button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>

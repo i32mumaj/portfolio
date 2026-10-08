@@ -9,6 +9,7 @@ a:hover { color: #f3efe6; }
 .h-lift:hover { transform: translate(-3px, -3px); box-shadow: 3px 3px 0 #f3efe6; color: #0b0c0a !important; }
 .h-shadow:hover { box-shadow: 3px 3px 0 #f3efe6; color: #0b0c0a !important; }
 .h-open:hover { transform: translate(-2px, -2px); box-shadow: 5px 5px 0 #f3efe6; color: #0b0c0a !important; }
+.h-close:hover { box-shadow: 4px 4px 0 #f3efe6; }
 .h-fill:hover { background: #c6f24e !important; color: #0b0c0a !important; }
 .h-row:hover { background: #12150e !important; }
 .h-tint:hover { background: rgba(198, 242, 78, .12) !important; }
