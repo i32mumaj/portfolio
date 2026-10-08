@@ -1,6 +1,7 @@
 import { Component, createRef } from 'react';
 import { GITHUB_URL } from '../config.js';
 import { ACHIEVEMENTS, FINAL, isUnlocked, resetAchievements, unlock, unlockedCount } from '../lib/achievements.js';
+import { PROCS } from '../lib/procs.js';
 
 const PAL = { fg: 'oklch(0.88 0.1 125)', dim: 'oklch(0.64 0.07 125)', acc: '#c6f24e', ok: '#f3efe6', err: 'oklch(0.72 0.19 35)' };
 
@@ -157,6 +158,9 @@ export default class Terminal extends Component {
       case 'projects': case 'cd': return this.projects();
       case 'open': return this.open(a);
       case 'curl': case 'http': case 'httpie': return this.curl(a);
+      case 'ps': return this.ps();
+      case 'kill': case 'pkill': case 'killall': return this.kill(args);
+      case 'systemctl': return this.systemctl(a);
       case 'achievements': return this.achievements(a);
       case 'gcc': case 'cc': case 'g++': case 'make': case 'clang': return this.gcc();
       case './jorge': case './a.out':
@@ -219,6 +223,40 @@ export default class Terminal extends Component {
     this.out('<', 'dim');
     await this.many(r.res, 'acc', 35);
     this.out('', 'fg', { href: this.url(k), linkText: `→ ${k} ${S.open}` });
+  }
+
+  async ps() {
+    const killed = this.props.killed || [];
+    this.out('USER       PID  STAT  COMMAND', 'dim');
+    for (const p of PROCS) {
+      const dead = killed.includes(p.name);
+      this.out(`${(p.pid === 1 ? 'root' : 'jorge').padEnd(9)}${String(p.pid).padStart(5)}  ${(dead ? 'Z' : p.pid === 1337 ? 'R+' : 'S').padEnd(4)}  ${p.cmd}${dead ? ' <defunct>' : ''}`, dead ? 'err' : 'fg');
+      await this.w(30);
+    }
+  }
+
+  async kill(args) {
+    const es = this.lang() === 'es';
+    const target = args.filter(x => !x.startsWith('-')).pop();
+    if (!target) return this.out('kill: usage: kill [-9] <pid>', 'dim');
+    const p = PROCS.find(x => String(x.pid) === target || x.name === target.toLowerCase());
+    if (!p) return this.out(`kill: (${target}) - No such process`, 'err');
+    if (p.pid === 1) return this.out('kill: (1) - Operation not permitted', 'err');
+    if (p.pid === 1337) return this.out(es ? 'bash: no pienso matarme a mí mismo.' : "bash: I'm not killing myself.", 'acc');
+    if ((this.props.killed || []).includes(p.name)) return this.out(`kill: (${p.pid}) - No such process`, 'err');
+    window.dispatchEvent(new CustomEvent('jm-kill', { detail: { name: p.name } }));
+    this.out(`[1]+  Killed                  ${p.cmd}`, 'err');
+    this.out(es ? `→ systemctl restart ${p.name} para recuperarlo` : `→ systemctl restart ${p.name} to bring it back`, 'dim');
+    unlock('kill');
+  }
+
+  async systemctl(a) {
+    const m = a.match(/^restart\s+(\S+)/);
+    if (!m) return this.out('systemctl restart <name|all>', 'dim');
+    const name = m[1].replace(/\.service$/, '');
+    if (name !== 'all' && !PROCS.some(p => p.section && p.name === name)) return this.out(`Failed to restart ${name}.service: Unit ${name}.service not found.`, 'err');
+    window.dispatchEvent(new CustomEvent('jm-restart', { detail: { name } }));
+    this.out(`● ${name}.service — active (running)`, 'ok');
   }
 
   async achievements(a) {

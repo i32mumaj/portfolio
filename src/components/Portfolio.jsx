@@ -7,9 +7,10 @@ import SideProjects from './SideProjects.jsx';
 import Stack from './Stack.jsx';
 import Contact from './Contact.jsx';
 import Terminal from './Terminal.jsx';
-import { AchievementToasts, Segfault } from './Easter.jsx';
+import { AchievementToasts, KilledSection, Segfault } from './Easter.jsx';
 import { useEasterEggs } from '../lib/useEasterEggs.js';
 import { unlock } from '../lib/achievements.js';
+import { PROCS } from '../lib/procs.js';
 
 const sectionBorder = { position: 'relative', borderTop: '1px solid rgba(198,242,78,.25)' };
 const TOTAL = '06';
@@ -68,6 +69,7 @@ export default function Portfolio() {
   const [root, setRoot] = useState(false);
   const [toast, setToast] = useState(false);
   const [segv, setSegv] = useState(false);
+  const [killed, setKilled] = useState([]);
   const openRef = useRef(open);
 
   useEffect(() => { openRef.current = open; }, [open]);
@@ -110,6 +112,10 @@ export default function Portfolio() {
       const el = document.getElementById('contacto');
       if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
     };
+    const onKill = e => setKilled(k => (k.includes(e.detail.name) ? k : [...k, e.detail.name]));
+    const onRestart = e => setKilled(k => (e.detail.name === 'all' ? [] : k.filter(n => n !== e.detail.name)));
+    window.addEventListener('jm-kill', onKill);
+    window.addEventListener('jm-restart', onRestart);
     window.addEventListener('jm-snake-win', onWin);
     window.addEventListener('jm-hire', onHire);
     window.addEventListener('keydown', onKey);
@@ -123,6 +129,8 @@ export default function Portfolio() {
       clearTimeout(idleT);
       clearTimeout(ggT);
       clearTimeout(toastT);
+      window.removeEventListener('jm-kill', onKill);
+      window.removeEventListener('jm-restart', onRestart);
       window.removeEventListener('jm-snake-win', onWin);
       window.removeEventListener('jm-hire', onHire);
       document.documentElement.style.filter = '';
@@ -134,6 +142,10 @@ export default function Portfolio() {
   const toggle = () => setOpen(o => !o);
   const sec = SECTIONS[lang] || SECTIONS.es;
   const pick = id => { if (id === 'en') unlock('english'); setLang(id); };
+  const alive = (name, node) => {
+    if (!killed.includes(name)) return node;
+    return <KilledSection pid={PROCS.find(p => p.name === name).pid} name={name} lang={lang} />;
+  };
   const links = { brevUrl: config.brevUrl, slateUrl: config.slateUrl, latchUrl: config.latchUrl };
 
   return (
@@ -147,27 +159,27 @@ export default function Portfolio() {
       </div>
 
       <section data-screen-label="Hero" style={{ position: 'relative' }}>
-        <Hero lang={lang} />
+        {alive('hero', <Hero lang={lang} />)}
       </section>
       <section data-screen-label="About" style={sectionBorder}>
         <SectionHeader n="02" label={sec.about} />
-        <About lang={lang} />
+        {alive('about', <About lang={lang} />)}
       </section>
       <section data-screen-label="Projects" style={sectionBorder}>
         <SectionHeader n="03" label={sec.projects} />
-        <Projects lang={lang} {...links} />
+        {alive('projects', <Projects lang={lang} {...links} />)}
       </section>
       <section data-screen-label="Side projects" style={sectionBorder}>
         <SectionHeader n="04" label={sec.side} />
-        <SideProjects lang={lang} />
+        {alive('side', <SideProjects lang={lang} />)}
       </section>
       <section data-screen-label="Stack" style={sectionBorder}>
         <SectionHeader n="05" label={sec.stack} />
-        <Stack lang={lang} />
+        {alive('stack', <Stack lang={lang} />)}
       </section>
       <section id="contacto" data-screen-label="Contact" style={sectionBorder}>
         <SectionHeader n="06" label={sec.contact} />
-        <Contact lang={lang} email={config.email} />
+        {alive('contact', <Contact lang={lang} email={config.email} />)}
       </section>
 
       {gg && <GGRain />}
@@ -197,7 +209,7 @@ export default function Portfolio() {
           </button>
         </div>
         <div style={{ flex: 1, minHeight: 0 }}>
-          <Terminal open={open} lang={lang} {...links} />
+          <Terminal open={open} lang={lang} killed={killed} {...links} />
         </div>
       </div>
 

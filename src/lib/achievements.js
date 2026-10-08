@@ -7,6 +7,7 @@ export const ACHIEVEMENTS = [
   { id: 'hire', es: ['Contratado', 'ejecutaste hire jorge', 'gana primero, luego contrata'], en: ['Hired', 'ran hire jorge', 'win first, then hire'] },
   { id: 'sudo', es: ['Persistente', 'conseguiste sudo', 'si no te dejan, insiste'], en: ['Persistent', 'got sudo', "if they say no, insist"] },
   { id: 'rmrf', es: ['Sin miedo', 'rm -rf / como root', 'un gran poder conlleva…'], en: ['Fearless', 'rm -rf / as root', 'with great power…'] },
+  { id: 'kill', es: ['kill -9', 'mataste una sección', 'algún proceso sobra (ps)'], en: ['kill -9', 'killed a section', 'some process has to go (ps)'] },
   { id: 'konami', es: ['Core dumped', 'rompiste la web', '↑ ↑ ↓ ↓ …'], en: ['Core dumped', 'crashed the site', '↑ ↑ ↓ ↓ …'] },
   { id: 'english', es: ['Bilingüe', 'cambiaste el idioma', 'habla otro idioma'], en: ['Bilingual', 'switched language', 'speak another language'] },
   { id: 'eof', es: ['EOF', 'llegaste al final', 'llega hasta abajo del todo'], en: ['EOF', 'reached the end', 'scroll all the way down'] },

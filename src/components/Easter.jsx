@@ -86,3 +86,12 @@ export function Segfault({ lang, onDone }) {
     </div>
   );
 }
+
+export function KilledSection({ pid, name, lang }) {
+  return (
+    <div style={{ padding: '72px 5vw', display: 'flex', flexDirection: 'column', gap: 12, font: `400 14px/1.6 ${mono}`, color: 'rgba(243,239,230,.6)' }}>
+      <div style={{ font: "400 clamp(28px,3vw,44px)/1 'VT323',monospace", color: '#ff8a6a', animation: 'jmGlitch .9s steps(2) infinite' }}>[{pid}] Killed · {name}</div>
+      <div>{lang === 'en' ? 'this process received SIGKILL. bring it back with' : 'este proceso recibió SIGKILL. recupéralo con'} <span style={{ background: '#c6f24e', color: '#0b0c0a', padding: '2px 6px' }}>systemctl restart {name}</span></div>
+    </div>
+  );
+}
