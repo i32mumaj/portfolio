@@ -43,6 +43,8 @@ const COMPLETIONS = ['help', 'whoami', 'projects', 'open brev', 'open slate', 'o
 const C_SRC = ['#include <stdio.h>', '', 'int main(void) {', '    int tiempo_libre = 0;', '    char *name = "Jorge Muñiz";', '    printf("hola, soy %s\\n", name);', '    return *(int *)0;  /* oops */', '}'];
 const PROMPT = 'jorge@portfolio:~$ ';
 const SNAKE_CELL = 2;
+const SNAKE_FRUITS = 5;
+const SNAKE_TICK = 130;
 
 export default class Terminal extends Component {
   state = { lang: null, langFrom: null, lines: [], input: '', busy: false, snake: false };
@@ -242,11 +244,22 @@ export default class Terminal extends Component {
 
   startSnake() {
     this.out(this.S().snakeHelp, 'dim');
-    this._g = { W: 22, H: 14, s: [{ x: 8, y: 7 }, { x: 7, y: 7 }, { x: 6, y: 7 }], d: { x: 1, y: 0 }, nd: { x: 1, y: 0 }, f: { x: 16, y: 5 }, sc: 0 };
+    this._g = { W: 22, H: 14, s: [{ x: 8, y: 7 }, { x: 7, y: 7 }, { x: 6, y: 7 }], d: { x: 1, y: 0 }, nd: { x: 1, y: 0 }, f: [], sc: 0 };
+    while (this._g.f.length < SNAKE_FRUITS && this.spawnFruit(this._g));
     this.setState({ snake: true, busy: true });
     clearInterval(this._sn);
-    this._sn = setInterval(() => this.snakeStep(), 105);
+    this._sn = setInterval(() => this.snakeStep(), SNAKE_TICK);
     return new Promise(res => { this._snakeDone = res; });
+  }
+
+  spawnFruit(g) {
+    const free = [];
+    for (let y = 0; y < g.H; y++) for (let x = 0; x < g.W; x++) {
+      if (!g.s.some(p => p.x === x && p.y === y) && !g.f.some(f => f.x === x && f.y === y)) free.push({ x, y });
+    }
+    if (!free.length) return false;
+    g.f.push(free[Math.floor(Math.random() * free.length)]);
+    return true;
   }
 
   snakeKey(e) {
@@ -266,11 +279,13 @@ export default class Terminal extends Component {
     if (!g) return;
     g.d = g.nd;
     const h = { x: g.s[0].x + g.d.x, y: g.s[0].y + g.d.y };
+    const fi = g.f.findIndex(f => f.x === h.x && f.y === h.y);
     if (h.x < 0 || h.y < 0 || h.x >= g.W || h.y >= g.H || g.s.some(p => p.x === h.x && p.y === h.y)) { this.snakeEnd(); return; }
     g.s.unshift(h);
-    if (h.x === g.f.x && h.y === g.f.y) {
+    if (fi >= 0) {
       g.sc++;
-      do { g.f = { x: Math.floor(Math.random() * g.W), y: Math.floor(Math.random() * g.H) }; } while (g.s.some(p => p.x === g.f.x && p.y === g.f.y));
+      g.f.splice(fi, 1);
+      this.spawnFruit(g);
     } else g.s.pop();
     const el = this.snakeRef.current;
     if (!el) return;
@@ -281,7 +296,7 @@ export default class Terminal extends Component {
       let r = '|';
       for (let x = 0; x < g.W; x++) {
         const i = g.s.findIndex(p => p.x === x && p.y === y);
-        r += i === 0 ? '@@' : i > 0 ? '[]' : (g.f.x === x && g.f.y === y) ? '<>' : '  ';
+        r += i === 0 ? '@@' : i > 0 ? '[]' : g.f.some(f => f.x === x && f.y === y) ? '<>' : '  ';
       }
       rows.push(r + '|');
     }
