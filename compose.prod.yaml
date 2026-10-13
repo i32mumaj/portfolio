@@ -1,0 +1,15 @@
+services:
+  portfolio:
+    build: .
+    ports: !reset []
+    networks: [web]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    deploy:
+      resources:
+        limits: { memory: 64M, cpus: "0.25", pids: 50 }
+networks:
+  web:
+    external: true
