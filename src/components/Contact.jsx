@@ -3,25 +3,21 @@ import { GITHUB_URL } from '../config.js';
 
 const T = {
   es: {
-    intro: 'Escribe aquí y te abro tu cliente de correo con el mensaje ya redactado. Si no usas ninguno, copia mi dirección.',
-    name: 'tu nombre', subject: 'asunto', body: 'mensaje', namePh: 'Ada Lovelace', subjectPh: 'Portfolio · tu nombre', bodyPh: 'Hola Jorge, ...',
+    title: 'Contacto', namePh: 'Ada Lovelace', subjectPh: 'Portfolio · tu nombre', bodyPh: 'Hola Jorge, ...',
     hireMsg: 'He llenado el tablero del snake y quiero hablar contigo.', draft: 'borrador', open: 'abrir en mi correo ↗', copy: 'copiar email', copied: 'copiado ✓', empty: 'escribe algo primero',
     opened: 'abriendo tu cliente de correo…', orDirect: 'o directamente:', noMail: 'aún no hay email configurado',
   },
   en: {
-    intro: "Write here and I'll open your mail client with the message ready to go. If you don't use one, copy my address.",
-    name: 'your name', subject: 'subject', body: 'message', namePh: 'Ada Lovelace', subjectPh: 'Portfolio · your name', bodyPh: 'Hi Jorge, ...',
+    title: 'Contact', namePh: 'Ada Lovelace', subjectPh: 'Portfolio · your name', bodyPh: 'Hi Jorge, ...',
     hireMsg: 'I cleared the snake board and I want to talk to you.', draft: 'draft', open: 'open in my mail ↗', copy: 'copy email', copied: 'copied ✓', empty: 'write something first',
     opened: 'opening your mail client…', orDirect: 'or directly:', noMail: 'no email set yet',
   },
 };
 
 const mono = "'Geist Mono',monospace";
-const labelStyle = { display: 'flex', flexDirection: 'column', gap: 8, font: `500 11px/1 ${mono}`, color: 'rgba(243,239,230,.6)' };
-const fieldStyle = { background: '#0d0f0b', border: '1px solid rgba(243,239,230,.25)', color: '#f3efe6', font: "400 16px/1 'Geist',sans-serif", padding: 14, outline: 'none' };
-const hdr = { color: 'rgba(243,239,230,.45)' };
+const hdr = { color: 'rgba(243,239,230,.45)', whiteSpace: 'nowrap' };
 
-export default function Contact({ lang, email: myEmail }) {
+export default function Contact({ lang, email: myEmail, mobile }) {
   const t = T[lang] || T.es;
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('');
@@ -57,58 +53,48 @@ export default function Contact({ lang, email: myEmail }) {
     try { await navigator.clipboard.writeText(myEmail); flash('copied'); } catch { /* clipboard unavailable */ }
   };
 
+  const fs = mobile ? 16 : 14;
+  // iOS zooms into fields under 16px, hence the bigger size on phones.
+  const lineInput = { background: 'transparent', border: 0, borderBottom: '1px dashed rgba(243,239,230,.25)', color: '#f3efe6', font: 'inherit', padding: '8px 0', outline: 'none', minWidth: 0, caretColor: '#c6f24e' };
+
   const statusLine = { opened: ['→ ' + t.opened, '#c6f24e'], copied: ['✓ ' + myEmail, '#c6f24e'], empty: ['! ' + t.empty, '#ff8a6a'] }[status];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0b0c0a', color: '#f3efe6', padding: '96px 5vw 80px' }}>
+    <div style={{ minHeight: mobile ? 0 : '100vh', background: '#0b0c0a', color: '#f3efe6', padding: mobile ? '56px 5vw 96px' : '96px 5vw 80px' }}>
       <div style={{ maxWidth: 1180, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 36 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <h2 style={{ margin: 0, font: "400 clamp(56px,8vw,128px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>
-              mailto:<span style={{ fontStyle: 'italic' }}>jorge</span>
-            </h2>
+            <h2 style={{ margin: 0, font: "400 clamp(56px,8vw,128px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>{t.title}</h2>
           </div>
-          <div style={{ font: `400 13px/1.5 ${mono}`, color: 'rgba(243,239,230,.65)', maxWidth: 420 }}>{t.intro}</div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,420px),1fr))', gap: 28, alignItems: 'start' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <label style={labelStyle}>{t.name}
-              <input value={name} onChange={e => setName(e.target.value)} placeholder={t.namePh} className="f-lime" style={fieldStyle} />
-            </label>
-            <label style={labelStyle}>{t.subject}
-              <input value={subject} onChange={e => setSubject(e.target.value)} placeholder={t.subjectPh} className="f-lime" style={fieldStyle} />
-            </label>
-            <label style={labelStyle}>{t.body}
-              <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={7} placeholder={t.bodyPh} className="f-lime" style={{ ...fieldStyle, lineHeight: 1.45, resize: 'vertical' }} />
-            </label>
+        {/* The draft is the form itself: one place to type, so nobody tries to write into a read-only preview. */}
+        <div style={{ border: '1px solid rgba(198,242,78,.45)', background: '#0d0f0b', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '10px 14px', borderBottom: '1px solid rgba(198,242,78,.3)', font: `500 11px/1 ${mono}`, color: '#c6f24e' }}>
+            <span>~/drafts/hola.eml</span><span style={{ color: 'rgba(243,239,230,.55)' }}>{t.draft} · {bytes} B</span>
           </div>
-
-          <div style={{ border: '1px solid rgba(198,242,78,.45)', background: '#0d0f0b', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(198,242,78,.3)', font: `500 11px/1 ${mono}`, color: '#c6f24e' }}>
-              <span>~/drafts/hola.eml</span><span style={{ color: 'rgba(243,239,230,.55)' }}>{t.draft} · {bytes} B</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr)', alignItems: 'center', gap: mobile ? '4px 12px' : '6px 18px', padding: mobile ? '14px 14px 6px' : '20px 22px 8px', font: `400 ${fs}px/1.4 ${mono}` }}>
+            <span style={hdr}>To:</span>
+            <span style={{ color: '#c6f24e', padding: '8px 0', overflowWrap: 'anywhere' }}>{myEmail || `<${t.noMail}>`}</span>
+            <span style={hdr}>From:</span>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder={t.namePh} className="f-lime" style={lineInput} />
+            <span style={hdr}>Subject:</span>
+            <input value={subject} onChange={e => setSubject(e.target.value)} placeholder={`Portfolio · ${name.trim() || '…'}`} className="f-lime" style={lineInput} />
+          </div>
+          <textarea value={msg} onChange={e => setMsg(e.target.value)} rows={mobile ? 7 : 8} placeholder={t.bodyPh} className="f-lime" style={{ margin: mobile ? '8px 14px 14px' : '10px 22px 20px', background: 'rgba(243,239,230,.03)', border: '1px dashed rgba(243,239,230,.2)', color: '#f3efe6', font: `400 ${fs}px/1.6 ${mono}`, padding: mobile ? 12 : 16, outline: 'none', resize: 'vertical', caretColor: '#c6f24e', minHeight: 160 }} />
+          <div style={{ borderTop: '1px dashed rgba(198,242,78,.3)', padding: mobile ? '14px' : '16px 22px', display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              <a href={href} onClick={onOpen} target={myEmail ? undefined : '_blank'} rel="noopener" className={ready ? 'h-lift' : undefined} style={{ background: '#c6f24e', color: '#0b0c0a', padding: '14px 20px', font: `600 13px/1 ${mono}`, textDecoration: 'none', opacity: ready || !myEmail ? 1 : 0.45, transition: 'transform .15s,opacity .2s' }}>
+                {myEmail ? t.open : 'GitHub ↗'}
+              </a>
+              {myEmail && (
+                <button onClick={onCopy} className="h-fill" style={{ background: 'transparent', border: '1px solid #c6f24e', color: '#c6f24e', padding: '13px 16px', font: `600 13px/1 ${mono}`, cursor: 'pointer' }}>
+                  {status === 'copied' ? t.copied : t.copy}
+                </button>
+              )}
             </div>
-            <pre style={{ margin: 0, padding: '18px 16px', minHeight: 260, whiteSpace: 'pre-wrap', wordBreak: 'break-word', font: `400 13px/1.65 ${mono}`, color: '#f3efe6' }}>
-              <span style={hdr}>To:      </span><span style={{ color: '#c6f24e' }}>{myEmail || `<${t.noMail}>`}</span>{'\n'}
-              <span style={hdr}>Subject: </span>{subj}{'\n'}
-              <span style={hdr}>X-From:  </span>{lang === 'en' ? 'portfolio contact section' : 'sección de contacto del portfolio'}{'\n\n'}
-              {body || <span style={{ color: 'rgba(243,239,230,.3)' }}>{t.bodyPh}</span>}
-              <span style={{ color: '#c6f24e', animation: 'jmBlink 1s steps(1) infinite' }}>▌</span>
-            </pre>
-            <div style={{ borderTop: '1px dashed rgba(198,242,78,.3)', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                <a href={href} onClick={onOpen} target={myEmail ? undefined : '_blank'} rel="noopener" className={ready ? 'h-lift' : undefined} style={{ background: '#c6f24e', color: '#0b0c0a', padding: '14px 20px', font: `600 13px/1 ${mono}`, textDecoration: 'none', opacity: ready || !myEmail ? 1 : 0.45, transition: 'transform .15s,opacity .2s' }}>
-                  {myEmail ? t.open : 'GitHub ↗'}
-                </a>
-                {myEmail && (
-                  <button onClick={onCopy} className="h-fill" style={{ background: 'transparent', border: '1px solid #c6f24e', color: '#c6f24e', padding: '13px 16px', font: `600 13px/1 ${mono}`, cursor: 'pointer' }}>
-                    {status === 'copied' ? t.copied : t.copy}
-                  </button>
-                )}
-              </div>
-              <div style={{ minHeight: 16, font: `400 12px/1.4 ${mono}`, color: statusLine ? statusLine[1] : 'transparent', transition: 'color .2s' }}>
-                {statusLine ? statusLine[0] : '·'}
-              </div>
+            <div style={{ minHeight: 16, font: `400 12px/1.4 ${mono}`, color: statusLine ? statusLine[1] : 'transparent', transition: 'color .2s' }}>
+              {statusLine ? statusLine[0] : '·'}
             </div>
           </div>
         </div>
