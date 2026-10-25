@@ -2,8 +2,8 @@ import { Component, createRef } from 'react';
 import { clamp01, hash } from '../lib/util.js';
 
 const T = {
-  es: { from: 'C / C++', to: 'Python', role: 'Backend Engineer', dDown: 'BAJA', dDone: 'compilado ✓', dScroll: 'HAZ SCROLL PARA COMPILARME', dHint: 'scroll = compilar la memoria · ratón = decodificar · click = malloc() · shift+click = free()' },
-  en: { from: 'C / C++', to: 'Python', role: 'Backend Engineer', dDown: 'SCROLL DOWN', dDone: 'compiled ✓', dScroll: 'SCROLL TO COMPILE ME', dHint: 'scroll = compile the memory · mouse = decode · click = malloc() · shift+click = free()' },
+  es: { from: 'C / C++', to: 'Python', role: 'Backend Engineer', dDown: 'BAJA', dDone: 'compilado ✓', dScroll: 'HAZ SCROLL PARA COMPILARME' },
+  en: { from: 'C / C++', to: 'Python', role: 'Backend Engineer', dDown: 'SCROLL DOWN', dDone: 'compiled ✓', dScroll: 'SCROLL TO COMPILE ME' },
 };
 
 const CODES = [
@@ -13,6 +13,7 @@ const CODES = [
 ];
 
 const SCROLL_PX = 2800;
+const MOBILE_W = 760;
 const MSG = 'JORGE MUÑIZ // BACKEND ENGINEER // PYTHON . FASTAPI . SQLALCHEMY // FORMERLY C & C++ // BREV . SLATE . LATCH // ';
 const GLITCH = '!<>-_/[]{}=+*^?#01;:';
 
@@ -72,19 +73,21 @@ function buildName(W, H, dpr, fs, x, y1, y2) {
 }
 
 export default class Hero extends Component {
-  state = { p: 0 };
+  state = { p: 0, codeH: 0 };
   canvasRef = createRef();
+  codeRef = createRef();
   ptrRef = createRef();
 
   componentDidMount() {
     this._mx = -9999; this._my = -9999;
     this._pt = 0; this._pd = 0;
-    this._onMove = e => { this._mx = e.clientX; this._my = e.clientY; };
+    // Only a real mouse drives the lens; on touch it would stay stuck where the last tap landed.
+    this._onMove = e => { if (e.pointerType === 'mouse') { this._mx = e.clientX; this._my = e.clientY; } };
     this._onDown = e => this.down(e);
     this._onWheel = e => this.wheel(e);
     this._onTS = e => { this._ty = e.touches[0].clientY; };
     this._onTM = e => this.touchMove(e);
-    window.addEventListener('mousemove', this._onMove);
+    window.addEventListener('pointermove', this._onMove);
     window.addEventListener('mousedown', this._onDown);
     window.addEventListener('wheel', this._onWheel, { passive: false });
     window.addEventListener('touchstart', this._onTS, { passive: true });
@@ -103,7 +106,7 @@ export default class Hero extends Component {
 
   componentWillUnmount() {
     cancelAnimationFrame(this._raf);
-    window.removeEventListener('mousemove', this._onMove);
+    window.removeEventListener('pointermove', this._onMove);
     window.removeEventListener('mousedown', this._onDown);
     window.removeEventListener('wheel', this._onWheel);
     window.removeEventListener('touchstart', this._onTS);
@@ -151,7 +154,9 @@ export default class Hero extends Component {
     cv.width = W * dpr; cv.height = H * dpr;
     const ctx = cv.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const cw = W < 900 ? 20 : 24, ch = 18, padL = W < 900 ? 72 : 104, padT = 118;
+    // On phones the address column goes and the name sits higher, clear of the panels stacked at the bottom.
+    const mob = W <= MOBILE_W;
+    const cw = mob ? 18 : W < 900 ? 20 : 24, ch = 18, padL = mob ? 14 : W < 900 ? 72 : 104, padT = mob ? 132 : 118;
     const cols = Math.max(8, Math.floor((W - padL - 20) / cw)), rows = Math.max(8, Math.floor((H - padT - 10) / ch));
     const n = cols * rows;
     const bytes = new Uint8Array(n);
@@ -162,10 +167,11 @@ export default class Hero extends Component {
     const o = oc.getContext('2d');
     o.fillStyle = '#fff'; o.textBaseline = 'middle'; o.textAlign = 'left';
     let F = oc.height * 0.36;
-    const w0 = drawName(o, F, 0, 0, 0, false).maxW, lim = oc.width * 0.66;
+    const w0 = drawName(o, F, 0, 0, 0, false).maxW, lim = oc.width * (mob ? 0.86 : 0.66);
     if (w0 > lim) F *= lim / w0;
-    drawName(o, F, oc.width * 0.02, oc.height * 0.21, oc.height * 0.55, true);
-    this._nameL = buildName(W, H, dpr, F / s, padL + oc.width * 0.02 / s, padT + oc.height * 0.21 / s, padT + oc.height * 0.55 / s);
+    const ny1 = oc.height * (mob ? 0.1 : 0.21), ny2 = mob ? ny1 + F * 1.25 : oc.height * 0.55;
+    drawName(o, F, oc.width * 0.02, ny1, ny2, true);
+    this._nameL = buildName(W, H, dpr, F / s, padL + oc.width * 0.02 / s, padT + ny1 / s, padT + ny2 / s);
 
     const img = o.getImageData(0, 0, oc.width, oc.height).data;
     const mask = new Float32Array(n);
@@ -210,7 +216,7 @@ export default class Hero extends Component {
     ctx.font = "500 11px 'Geist Mono', monospace"; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
     const pr = Math.floor((my - padT) / ch), pc = Math.floor((mx - padL) / cw);
     ctx.globalAlpha = conv;
-    for (let r = 0; r < rows; r++) {
+    for (let r = 0; r < rows && padL > 40; r++) {
       ctx.fillStyle = inside && r === pr ? '#c6f24e' : 'rgba(243,239,230,.24)';
       ctx.fillText((0x7ffd3a00 + r * cols).toString(16).padStart(8, '0'), 16, padT + r * ch + ch / 2);
     }
@@ -287,6 +293,10 @@ export default class Hero extends Component {
       ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2); ctx.stroke();
     }
 
+    // The phone layout grows the code panel's slot from 0, so it needs the panel's natural height.
+    const code = this.codeRef.current;
+    if (code && code.offsetHeight !== this.state.codeH) this.setState({ codeH: code.offsetHeight });
+
     const el = this.ptrRef.current;
     if (el) {
       let txt = 'ptr = NULL';
@@ -322,71 +332,102 @@ export default class Hero extends Component {
     const mono = "'Geist Mono',monospace";
     const hudBox = { background: '#0b0c0a', border: '1px solid rgba(198,242,78,.35)', pointerEvents: 'none' };
 
+    const m = this.props.mobile;
+    const vh = m ? '100svh' : '100vh';
+    const serveBox = (
+      <div style={{ ...hudBox, padding: m ? '12px 14px' : '16px 18px', display: 'flex', flexDirection: 'column', gap: m ? 8 : 10, opacity: clamp01((p - 0.15) / 0.1) }}>
+        <div style={{ font: `500 11px/1 ${mono}`, color: '#c6f24e' }}>$ ./jorge --serve</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: m ? '4px 10px' : 12, font: `400 ${m ? '17px' : 'clamp(18px,1.7vw,24px)'}/1.2 'Geist',sans-serif` }}>
+          <span style={{ position: 'relative', opacity: 0.6 }}>
+            {t.from}
+            <span style={{ position: 'absolute', left: -4, top: '52%', height: 2, background: '#c6f24e', width: `${clamp01((p - 0.72) / 0.13) * 108}%` }} />
+          </span>
+          <span style={{ fontFamily: mono, color: '#c6f24e' }}>→</span>
+          <span style={{ opacity: 0.15 + 0.85 * clamp01((p - 0.75) / 0.12) }}>{t.to} · {t.role}</span>
+        </div>
+      </div>
+    );
+    const codePanel = (
+      <div ref={this.codeRef} style={{ position: 'relative', opacity: m ? Math.min(1, dOp * 4) : dOp, transform: m ? 'none' : `translateY(${(1 - dOp) * 40}px)` }}>
+        <div style={{ background: '#0b0c0a', border: '1px solid rgba(198,242,78,.5)' }}>
+          <div style={{ display: 'flex', borderBottom: '1px solid rgba(198,242,78,.5)', font: `500 ${m ? 10 : 11}px/1 ${mono}` }}>
+            {['main.c', 'main.cpp', 'main.py'].map((f, i) => (
+              <div key={f} style={{ padding: m ? '8px 10px' : '10px 12px', borderRight: '1px solid rgba(198,242,78,.5)', background: i === stD ? '#c6f24e' : 'transparent', color: i === stD ? '#0b0c0a' : '#c6f24e' }}>{f}</div>
+            ))}
+          </div>
+          <div style={{ padding: m ? '10px 0' : '14px 0', font: `400 ${m ? '11px/1.55' : 'clamp(11px,.95vw,14px)/1.75'} ${mono}`, overflow: 'hidden' }}>
+            {codeLines.map(ln => (
+              <div key={ln.n} style={{ display: 'flex', gap: m ? 10 : 14, padding: m ? '0 12px' : '0 14px', whiteSpace: 'pre', color: ln.color }}>
+                <span style={{ opacity: 0.35 }}>{ln.n}</span><span>{ln.text}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ borderTop: '1px solid rgba(198,242,78,.5)', padding: m ? '8px 12px' : '10px 14px', font: `400 11px/1.6 ${mono}`, display: 'flex', flexDirection: m ? 'row' : 'column', flexWrap: 'wrap', justifyContent: 'space-between', gap: m ? '2px 12px' : 2 }}>
+            <div style={{ opacity: 0.55 }}>{['$ gcc main.c -o jorge', '$ g++ -std=c++20 main.cpp', '$ uvicorn main:app'][stD]}</div>
+            <div style={{ color: '#c6f24e' }}>{stD < 2 ? 'hola, soy Jorge Muñiz' : 'GET /jorge  →  200 OK'}</div>
+          </div>
+          <div style={{ height: 3, background: '#c6f24e', width: `${pct}%` }} />
+        </div>
+        <div style={{ position: 'absolute', right: m ? 10 : -8, top: m ? -20 : -28, transform: `rotate(-7deg) scale(${1.5 - 0.5 * stamp})`, opacity: stamp, border: '2px solid #c6f24e', color: '#c6f24e', padding: m ? '7px 11px' : '9px 14px', font: `600 ${m ? 20 : 26}px/1 ${mono}`, background: '#0b0c0a' }}>200 OK</div>
+      </div>
+    );
+
     return (
-      <div style={{ height: '100vh', background: '#0b0c0a', color: '#f3efe6' }}>
-        <div style={{ position: 'sticky', top: 0, height: '100vh', minHeight: 620, overflow: 'hidden' }}>
+      <div style={{ height: vh, background: '#0b0c0a', color: '#f3efe6' }}>
+        <div style={{ position: 'sticky', top: 0, height: vh, minHeight: m ? 560 : 620, overflow: 'hidden' }}>
           <canvas ref={this.canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block', cursor: 'crosshair' }} />
 
-          <div style={{ position: 'absolute', left: 24, top: 72, display: 'flex', gap: 6, alignItems: 'center', font: `500 11px/1 ${mono}`, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', left: m ? 14 : 24, top: m ? 64 : 72, display: 'flex', gap: m ? 4 : 6, alignItems: 'center', font: `500 ${m ? 10 : 11}px/1 ${mono}`, pointerEvents: 'none' }}>
             {['malloc', 'write', 'decode', 'transpile', 'serve'].map((label, i) => (
-              <div key={label} style={{ padding: '7px 10px', border: '1px solid rgba(198,242,78,.4)', background: i === phD ? '#c6f24e' : '#0b0c0a', color: i === phD ? '#0b0c0a' : '#c6f24e' }}>{label}</div>
+              <div key={label} style={{ padding: m ? '6px 7px' : '7px 10px', border: '1px solid rgba(198,242,78,.4)', background: i === phD ? '#c6f24e' : '#0b0c0a', color: i === phD ? '#0b0c0a' : '#c6f24e' }}>{label}</div>
             ))}
-            <div style={{ padding: '7px 10px', color: '#c6f24e' }}>{pct}%</div>
+            {!m && <div style={{ padding: '7px 10px', color: '#c6f24e' }}>{pct}%</div>}
           </div>
 
-          <div style={{ position: 'absolute', right: 24, top: 120, bottom: 24, display: 'flex', gap: 14, alignItems: 'stretch', pointerEvents: 'none', zIndex: 3, opacity: intro, transition: 'opacity .3s' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 18, font: `600 14px/1 ${mono}`, color: '#c6f24e' }}>
-              <span style={{ font: "400 34px/.8 'VT323',monospace", background: '#0b0c0a', padding: '2px 4px' }}>{pct}%</span>
-              <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '.12em', background: '#0b0c0a', padding: '6px 2px' }}>{done ? t.dDone.toUpperCase() : t.dDown}</span>
-            </div>
-            <div style={{ width: 22, position: 'relative', background: 'rgba(198,242,78,.14)' }}>
-              <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: `${pct}%`, background: '#c6f24e' }} />
-              <div style={{ position: 'absolute', left: '50%', top: `${pct}%`, transform: 'translate(-50%,6px)', opacity: done ? 0 : 1 }}>
-                <div style={{ fontSize: 28, lineHeight: 1, color: '#c6f24e', animation: 'jmBounce 1.1s ease-in-out infinite' }}>↓</div>
+          {m ? (
+            <div style={{ position: 'absolute', left: 14, right: 14, top: 94, display: 'flex', alignItems: 'center', gap: 10, pointerEvents: 'none', zIndex: 3, opacity: intro, transition: 'opacity .3s', font: `600 11px/1 ${mono}`, color: '#c6f24e' }}>
+              <span style={{ font: "400 22px/.8 'VT323',monospace", minWidth: 42 }}>{pct}%</span>
+              <div style={{ flex: 1, height: 6, background: 'rgba(198,242,78,.14)' }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: '#c6f24e' }} />
               </div>
-            </div>
-          </div>
-
-          <div ref={this.ptrRef} style={{ ...hudBox, position: 'absolute', right: 24, top: 72, font: `500 12px/1 ${mono}`, color: '#c6f24e', padding: '8px 10px', whiteSpace: 'pre' }}>ptr = NULL</div>
-
-          <div style={{ ...hudBox, position: 'absolute', left: 24, bottom: 24, maxWidth: 'min(520px,50vw)', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 10, opacity: clamp01((p - 0.15) / 0.1) }}>
-            <div style={{ font: `500 11px/1 ${mono}`, color: '#c6f24e' }}>$ ./jorge --serve</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: 12, font: "400 clamp(18px,1.7vw,24px)/1.2 'Geist',sans-serif" }}>
-              <span style={{ position: 'relative', opacity: 0.6 }}>
-                {t.from}
-                <span style={{ position: 'absolute', left: -4, top: '52%', height: 2, background: '#c6f24e', width: `${clamp01((p - 0.72) / 0.13) * 108}%` }} />
+              <span style={{ letterSpacing: '.08em', whiteSpace: 'nowrap' }}>
+                {done ? t.dDone.toUpperCase() : <>{t.dDown} <span style={{ display: 'inline-block', animation: 'jmBounce 1.1s ease-in-out infinite' }}>↓</span></>}
               </span>
-              <span style={{ fontFamily: mono, color: '#c6f24e' }}>→</span>
-              <span style={{ opacity: 0.15 + 0.85 * clamp01((p - 0.75) / 0.12) }}>{t.to} · {t.role}</span>
             </div>
-            <div style={{ font: `400 11px/1.5 ${mono}`, opacity: 0.6 }}>{t.dHint}</div>
-          </div>
-
-          <div style={{ position: 'absolute', right: 84, bottom: 24, width: 'min(470px,42vw)', opacity: dOp, transform: `translateY(${(1 - dOp) * 40}px)`, pointerEvents: 'none' }}>
-            <div style={{ background: '#0b0c0a', border: '1px solid rgba(198,242,78,.5)' }}>
-              <div style={{ display: 'flex', borderBottom: '1px solid rgba(198,242,78,.5)', font: `500 11px/1 ${mono}` }}>
-                {['main.c', 'main.cpp', 'main.py'].map((f, i) => (
-                  <div key={f} style={{ padding: '10px 12px', borderRight: '1px solid rgba(198,242,78,.5)', background: i === stD ? '#c6f24e' : 'transparent', color: i === stD ? '#0b0c0a' : '#c6f24e' }}>{f}</div>
-                ))}
-              </div>
-              <div style={{ padding: '14px 0', font: `400 clamp(11px,.95vw,14px)/1.75 ${mono}`, overflow: 'hidden' }}>
-                {codeLines.map(ln => (
-                  <div key={ln.n} style={{ display: 'flex', gap: 14, padding: '0 14px', whiteSpace: 'pre', color: ln.color }}>
-                    <span style={{ opacity: 0.35 }}>{ln.n}</span><span>{ln.text}</span>
+          ) : (
+            <>
+              <div style={{ position: 'absolute', right: 24, top: 120, bottom: 24, display: 'flex', gap: 14, alignItems: 'stretch', pointerEvents: 'none', zIndex: 3, opacity: intro, transition: 'opacity .3s' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 18, font: `600 14px/1 ${mono}`, color: '#c6f24e' }}>
+                  <span style={{ font: "400 34px/.8 'VT323',monospace", background: '#0b0c0a', padding: '2px 4px' }}>{pct}%</span>
+                  <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '.12em', background: '#0b0c0a', padding: '6px 2px' }}>{done ? t.dDone.toUpperCase() : t.dDown}</span>
+                </div>
+                <div style={{ width: 22, position: 'relative', background: 'rgba(198,242,78,.14)' }}>
+                  <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: `${pct}%`, background: '#c6f24e' }} />
+                  <div style={{ position: 'absolute', left: '50%', top: `${pct}%`, transform: 'translate(-50%,6px)', opacity: done ? 0 : 1 }}>
+                    <div style={{ fontSize: 28, lineHeight: 1, color: '#c6f24e', animation: 'jmBounce 1.1s ease-in-out infinite' }}>↓</div>
                   </div>
-                ))}
+                </div>
               </div>
-              <div style={{ borderTop: '1px solid rgba(198,242,78,.5)', padding: '10px 14px', font: `400 11px/1.6 ${mono}`, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <div style={{ opacity: 0.55 }}>{['$ gcc main.c -o jorge', '$ g++ -std=c++20 main.cpp', '$ uvicorn main:app'][stD]}</div>
-                <div style={{ color: '#c6f24e' }}>{stD < 2 ? 'hola, soy Jorge Muñiz' : 'GET /jorge  →  200 OK'}</div>
-              </div>
-              <div style={{ height: 3, background: '#c6f24e', width: `${pct}%` }} />
+
+              <div ref={this.ptrRef} style={{ ...hudBox, position: 'absolute', right: 24, top: 72, font: `500 12px/1 ${mono}`, color: '#c6f24e', padding: '8px 10px', whiteSpace: 'pre' }}>ptr = NULL</div>
+            </>
+          )}
+
+          {m ? (
+            <div style={{ position: 'absolute', left: 14, right: 14, bottom: 14, display: 'flex', flexDirection: 'column', gap: 10, pointerEvents: 'none' }}>
+              {serveBox}
+              {/* The slot grows from nothing and the panel rises out of the bottom edge, pushing the serve box up. */}
+              <div style={{ height: (1 - Math.pow(1 - dOp, 3)) * this.state.codeH, marginTop: dOp > 0 ? 0 : -10 }}>{codePanel}</div>
             </div>
-            <div style={{ position: 'absolute', right: -8, top: -28, transform: `rotate(-7deg) scale(${1.5 - 0.5 * stamp})`, opacity: stamp, border: '2px solid #c6f24e', color: '#c6f24e', padding: '9px 14px', font: `600 26px/1 ${mono}`, background: '#0b0c0a' }}>200 OK</div>
-          </div>
+          ) : (
+            <>
+              <div style={{ position: 'absolute', left: 24, bottom: 24, maxWidth: 'min(520px,50vw)' }}>{serveBox}</div>
+              <div style={{ position: 'absolute', right: 84, bottom: 24, width: 'min(470px,42vw)', pointerEvents: 'none' }}>{codePanel}</div>
+            </>
+          )}
 
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', opacity: 1 - intro, transform: `scale(${1 + intro * 0.15})`, transition: 'opacity .3s' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#c6f24e', color: '#0b0c0a', padding: '14px 22px', font: `600 clamp(15px,1.3vw,18px)/1 ${mono}`, whiteSpace: 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#c6f24e', color: '#0b0c0a', padding: m ? '13px 18px' : '14px 22px', font: `600 ${m ? '14px' : 'clamp(15px,1.3vw,18px)'}/1 ${mono}`, whiteSpace: 'nowrap' }}>
               <span style={{ display: 'inline-block', animation: 'jmBounce 1.2s ease-in-out infinite' }}>↓</span>{t.dScroll}
             </div>
           </div>
