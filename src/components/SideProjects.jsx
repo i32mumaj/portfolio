@@ -26,15 +26,15 @@ const PROJ = [
 ];
 
 const T = {
-  es: { title: 'Side quests', intro: 'Proyectos de la carrera y de cursos: de mi primera app en C++ a plataformas web completas.', repo: 'ver repo', hint: 'click en la carta de arriba = pop() · pasa el ratón para abrir el abanico' },
-  en: { title: 'Side quests', intro: 'University and course projects: from my first C++ app to full web platforms.', repo: 'view repo', hint: 'click the top card = pop() · hover to fan the deck' },
+  es: { title: 'Side', titleEm: 'quests', intro: 'Proyectos de la carrera y de cursos: de mi primera app en C++ a plataformas web completas.', repo: 'ver repo' },
+  en: { title: 'Side', titleEm: 'quests', intro: 'University and course projects: from my first C++ app to full web platforms.', repo: 'view repo' },
 };
 
 const N = PROJ.length;
 const mono = "'Geist Mono',monospace";
 const addr = i => '0x' + (0x7f3a10 + i * 0x40).toString(16);
 
-export default function SideProjects({ lang }) {
+export default function SideProjects({ lang, mobile }) {
   const t = T[lang] || T.es;
   const [order, setOrder] = useState(() => PROJ.map((_, i) => i));
   const [fly, setFly] = useState(null);
@@ -78,16 +78,16 @@ export default function SideProjects({ lang }) {
   const top = PROJ[order[0]];
 
   return (
-    <div style={{ background: '#0b0c0a', color: '#f3efe6', padding: '96px 5vw 120px', display: 'flex', flexDirection: 'column', gap: 48, minHeight: '100vh' }}>
+    <div style={{ background: '#0b0c0a', color: '#f3efe6', padding: mobile ? '56px 5vw 80px' : '96px 5vw 120px', display: 'flex', flexDirection: 'column', gap: mobile ? 32 : 48, minHeight: mobile ? 0 : '100vh' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <h2 style={{ margin: 0, font: "400 clamp(48px,6.5vw,104px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>{t.title}</h2>
+          <h2 style={{ margin: 0, font: "400 clamp(48px,6.5vw,104px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>{t.title} <span style={{ color: '#c6f24e' }}>{t.titleEm}</span></h2>
         </div>
         <div style={{ font: `400 13px/1.5 ${mono}`, color: 'rgba(243,239,230,.65)', maxWidth: 380 }}>{t.intro}</div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,420px),1fr))', gap: 56, alignItems: 'center' }}>
-        <div onMouseEnter={() => setFan(true)} onMouseLeave={() => setFan(false)} style={{ position: 'relative', height: 500, maxWidth: 520, width: '100%' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,420px),1fr))', gap: mobile ? 24 : 56, alignItems: 'center' }}>
+        <div onPointerEnter={e => e.pointerType === 'mouse' && setFan(true)} onPointerLeave={() => setFan(false)} style={{ position: 'relative', height: mobile ? 470 : 500, maxWidth: 520, width: '100%' }}>
           {PROJ.map((p, i) => {
             const pos = order.indexOf(i), flying = fly === i;
             const tf = flying ? 'translate(130%,-12%) rotate(16deg)'
@@ -97,7 +97,7 @@ export default function SideProjects({ lang }) {
               <button
                 key={p.id}
                 onClick={() => (pos === 0 ? pop() : bringTop(i))}
-                style={{ position: 'absolute', left: 24, top: 40, width: 'min(320px,78%)', height: 400, padding: 22, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 16, textAlign: 'left', cursor: 'pointer', background: '#11130f', border: `1px solid ${pos === 0 ? '#c6f24e' : 'rgba(198,242,78,.25)'}`, color: '#f3efe6', zIndex: flying ? 50 : N - pos, opacity: flying ? 0 : pos > 3 ? 0 : 1, transform: tf, transformOrigin: '30% 110%', transition: 'transform .6s cubic-bezier(.2,.8,.2,1),opacity .4s,border-color .3s', boxShadow: '0 18px 40px rgba(0,0,0,.45)' }}
+                style={{ position: 'absolute', left: mobile ? 4 : 24, top: 40, width: 'min(320px,78%)', height: 400, padding: 22, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 16, textAlign: 'left', cursor: 'pointer', background: '#11130f', border: `1px solid ${pos === 0 ? '#c6f24e' : 'rgba(198,242,78,.25)'}`, color: '#f3efe6', zIndex: flying ? 50 : N - pos, opacity: flying ? 0 : pos > 3 ? 0 : 1, transform: tf, transformOrigin: '30% 110%', transition: 'transform .6s cubic-bezier(.2,.8,.2,1),opacity .4s,border-color .3s', boxShadow: '0 18px 40px rgba(0,0,0,.45)' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', font: "400 22px/1 'VT323',monospace", color: '#c6f24e' }}>
                   <span>{addr(i)}</span><span>#{String(i + 1).padStart(2, '0')}</span>
@@ -130,7 +130,6 @@ export default function SideProjects({ lang }) {
             <button onClick={push} className="h-tint-soft" style={{ background: 'transparent', color: '#c6f24e', border: '1px solid rgba(198,242,78,.5)', padding: '13px 18px', font: `600 13px/1 ${mono}`, cursor: 'pointer' }}>push()</button>
             <a href={top.url} target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', padding: '0 6px', font: `500 13px/1 ${mono}`, textDecoration: 'none' }}>{t.repo} {top.id} ↗</a>
           </div>
-          <div style={{ font: `400 11px/1 ${mono}`, color: 'rgba(243,239,230,.45)' }}>{t.hint}</div>
         </div>
       </div>
     </div>
