@@ -331,8 +331,8 @@ export default class Terminal extends Component {
       console.log('%c[snake] debug build · flag=' + GOD_HINT, 'color:#c6f24e;background:#0b0c0a;padding:2px 6px;font-family:monospace');
     }
     this._g = god
-      ? { W: 22, H: 14, s: [{ x: 3, y: 0 }, { x: 2, y: 0 }, { x: 1, y: 0 }], d: { x: 1, y: 0 }, nd: { x: 1, y: 0 }, f: [], sc: 0, god: true }
-      : { W: 22, H: 14, s: [{ x: 8, y: 7 }, { x: 7, y: 7 }, { x: 6, y: 7 }], d: { x: 1, y: 0 }, nd: { x: 1, y: 0 }, f: [], sc: 0 };
+      ? { W: 22, H: 14, s: [{ x: 3, y: 0 }, { x: 2, y: 0 }, { x: 1, y: 0 }], d: { x: 1, y: 0 }, q: [], f: [], sc: 0, god: true }
+      : { W: 22, H: 14, s: [{ x: 8, y: 7 }, { x: 7, y: 7 }, { x: 6, y: 7 }], d: { x: 1, y: 0 }, q: [], f: [], sc: 0 };
     if (!god) while (this._g.f.length < SNAKE_FRUITS && this.spawnFruit(this._g));
     this.setState({ snake: true, busy: true });
     clearInterval(this._sn);
@@ -366,14 +366,16 @@ export default class Terminal extends Component {
     if (map[k]) {
       e.preventDefault();
       const [x, y] = map[k];
-      if (x !== -g.d.x || y !== -g.d.y) g.nd = { x, y };
+      // Queue turns so two quick presses within one tick (e.g. up then left) both land; validate against the last queued one.
+      const last = g.q[g.q.length - 1] || g.d;
+      if (g.q.length < 3 && (x !== last.x || y !== last.y) && (x !== -last.x || y !== -last.y)) g.q.push({ x, y });
     }
   }
 
   snakeStep() {
     const g = this._g;
     if (!g) return;
-    g.d = g.god ? this.godDir(g, g.s[0]) : g.nd;
+    g.d = g.god ? this.godDir(g, g.s[0]) : g.q.shift() || g.d;
     const h = { x: g.s[0].x + g.d.x, y: g.s[0].y + g.d.y };
     const fi = g.god ? 0 : g.f.findIndex(f => f.x === h.x && f.y === h.y);
     // The tail moves out of the way this tick unless we're growing, so the head may follow it.
@@ -389,15 +391,12 @@ export default class Terminal extends Component {
     if (!el) return;
     // ASCII only (VT323 draws box-drawing glyphs wider), two chars per cell so cells are square.
     const edge = '+' + '-'.repeat(g.W * SNAKE_CELL) + '+';
+    const grid = Array.from({ length: g.H }, () => Array(g.W).fill('  '));
+    for (const f of g.f) grid[f.y][f.x] = '<>';
+    for (const p of g.s) grid[p.y][p.x] = '[]';
+    grid[g.s[0].y][g.s[0].x] = '@@';
     const rows = [`score ${String(g.sc).padStart(3, '0')}`, edge];
-    for (let y = 0; y < g.H; y++) {
-      let r = '|';
-      for (let x = 0; x < g.W; x++) {
-        const i = g.s.findIndex(p => p.x === x && p.y === y);
-        r += i === 0 ? '@@' : i > 0 ? '[]' : g.f.some(f => f.x === x && f.y === y) ? '<>' : '  ';
-      }
-      rows.push(r + '|');
-    }
+    for (const r of grid) rows.push('|' + r.join('') + '|');
     rows.push(edge);
     el.textContent = rows.join('\n');
     const sc = this.scrollRef.current;
