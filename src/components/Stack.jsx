@@ -20,16 +20,16 @@ const ORDER = ['python', 'fastapi', 'pydantic', 'sqlalchemy', 'sqlite', 'postgre
 const TREE = { python: '├── ', fastapi: '│   ├── ', pydantic: '│   │   └── ', sqlalchemy: '│   └── ', sqlite: '│       ├── ', postgres: '│       └── ', docker: '├── ', gha: '│   └── ', react: '├── ', git: '├── ', linux: '├── ', c: '└── ', cpp: '    └── ' };
 
 const T = {
-  es: { reinstall: 'reinstalar', since: 'Desde', years: ['1º de carrera', '2º de carrera', '3º de carrera', '4º de carrera'],
-    intro: 'Mis herramientas como dependencias. Pasa el ratón por un paquete para ver dónde lo uso.', foot: 'c y c++ compilados desde el código fuente (gcc).' },
-  en: { reinstall: 'reinstall', since: 'Since', years: ['1st year', '2nd year', '3rd year', '4th year'],
-    intro: 'My tools as dependencies. Hover a package to see where I use it.', foot: 'c and c++ built from source (gcc).' },
+  es: { title: 'Mis', titleEm: 'herramientas', reinstall: 'reinstalar', since: 'Desde', years: ['1º de carrera', '2º de carrera', '3º de carrera', '4º de carrera'],
+    intro: 'Mis herramientas como dependencias.', introHover: ' Pasa el ratón por un paquete para ver dónde lo uso.' },
+  en: { title: 'My', titleEm: 'tools', reinstall: 'reinstall', since: 'Since', years: ['1st year', '2nd year', '3rd year', '4th year'],
+    intro: 'My tools as dependencies.', introHover: ' Hover a package to see where I use it.' },
 };
 
 const mono = "'Geist Mono',monospace";
 const byKey = k => SK.find(s => s.k === k);
 
-export default function Stack({ lang }) {
+export default function Stack({ lang, mobile }) {
   const t = T[lang] || T.es;
   const [pip, setPip] = useState(0);
   const [sel, setSel] = useState('python');
@@ -64,23 +64,23 @@ export default function Stack({ lang }) {
   const sk = byKey(sel);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0b0c0a', color: '#f3efe6', padding: '96px 5vw 100px' }}>
+    <div style={{ minHeight: mobile ? 0 : '100vh', background: '#0b0c0a', color: '#f3efe6', padding: mobile ? '56px 5vw 80px' : '96px 5vw 100px' }}>
       <div style={{ maxWidth: 1180, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 36 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <h2 style={{ margin: 0, font: "400 clamp(52px,7.5vw,116px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>pip install <span style={{ fontStyle: 'italic' }}>jorge</span></h2>
+            <h2 style={{ margin: 0, font: "400 clamp(52px,7.5vw,116px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>{t.title} <span style={{ fontStyle: 'italic', color: '#c6f24e' }}>{t.titleEm}</span></h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start', maxWidth: 380 }}>
-            <div style={{ font: `400 13px/1.5 ${mono}`, color: 'rgba(243,239,230,.65)' }}>{t.intro}</div>
+            <div style={{ font: `400 13px/1.5 ${mono}`, color: 'rgba(243,239,230,.65)' }}>{t.intro}{!mobile && t.introHover}</div>
             <button onClick={runPip} className="h-fill" style={{ background: 'transparent', border: '1px solid #c6f24e', color: '#c6f24e', padding: '9px 12px', font: `600 12px/1 ${mono}`, cursor: 'pointer' }}>↻ {t.reinstall}</button>
           </div>
         </div>
 
         <div ref={pipRef} className="stack-grid" style={{ display: 'grid', gap: 24, alignItems: 'start' }}>
-          <div style={{ border: '1px solid rgba(198,242,78,.45)', background: '#0d0f0b', padding: '20px 22px', font: `400 14px/1.7 ${mono}`, minHeight: 520, minWidth: 0 }}>
+          <div style={{ border: '1px solid rgba(198,242,78,.45)', background: '#0d0f0b', padding: mobile ? '16px 14px' : '20px 22px', font: `400 ${mobile ? 13 : 14}px/1.7 ${mono}`, minHeight: mobile ? 390 : 520, minWidth: 0 }}>
             <div style={{ color: '#c6f24e' }}>$ pip install jorge</div>
             {rows.map(r => (
-              <div key={r.k} onMouseEnter={() => setSel(r.k)} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 44px', gap: 14, alignItems: 'center', whiteSpace: 'pre', cursor: 'default', padding: '0 6px', margin: '0 -6px', background: sel === r.k ? 'rgba(198,242,78,.1)' : 'transparent' }}>
+              <div key={r.k} onMouseEnter={() => setSel(r.k)} onClick={() => setSel(r.k)} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 44px', gap: 14, alignItems: 'center', whiteSpace: 'pre', cursor: 'default', padding: '0 6px', margin: '0 -6px', background: sel === r.k ? 'rgba(198,242,78,.1)' : 'transparent' }}>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   <span style={{ color: 'rgba(243,239,230,.4)' }}>{TREE[r.k]}</span>
                   <span style={{ color: r.c }}>{r.k}</span>
@@ -89,12 +89,6 @@ export default function Stack({ lang }) {
                 <span style={{ textAlign: 'right', fontSize: 12, color: 'rgba(243,239,230,.55)' }}>{r.pct}</span>
               </div>
             ))}
-            {pip >= ORDER.length && (
-              <>
-                <div style={{ marginTop: 10, color: '#c6f24e' }}>Successfully installed jorge-4.0 ✓</div>
-                <div style={{ color: 'rgba(243,239,230,.55)' }}>{t.foot}</div>
-              </>
-            )}
           </div>
 
           <div style={{ border: '1px solid rgba(243,239,230,.2)', padding: 22, display: 'flex', flexDirection: 'column', gap: 14, position: 'sticky', top: 90 }}>
