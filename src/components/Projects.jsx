@@ -4,25 +4,25 @@ import { hash, wait } from '../lib/util.js';
 
 const T = {
   es: {
-    title: 'jorge/docs', intro: 'Cada proyecto documentado como en FastAPI. Ejecuta un endpoint y la demo de al lado responde de verdad.',
+    title: 'Tres apps,', titleEm: 'en producción', intro: 'Cada proyecto documentado como en FastAPI. Ejecuta un endpoint y la demo de al lado responde de verdad.',
     brevDesc: 'Acortador de enlaces. Recibe una URL, genera un código corto y redirige con un 307.',
     slateDesc: 'Gastos en grupo al estilo Tricount: apuntas quién paga y calcula cuánto debe cada uno y cómo saldar con el mínimo de transferencias.',
     latchDesc: 'Gestor de contraseñas zero-knowledge: se cifra todo en tu navegador y el servidor solo guarda texto cifrado.',
-    open: 'Abrir', sim: 'demo simulada', real: 'cifrado real en tu navegador', shorten: 'acortar', visit: 'visitar →', paid: 'pagó', add: '+ gasto',
-    browser: 'tu navegador', server: 'lo que ve el servidor', secret: 'secreto', keyNote: 'la clave se deriva aquí y nunca sale de este dispositivo.',
+    open: 'Abrir', shorten: 'acortar', visit: 'visitar →', paid: 'pagó', add: '+ gasto',
+    gen: 'Generador de contraseñas', another: '↻ generar', chars: 'caract.',
     live: 'en vivo · desde la demo', execute: 'ejecutar en la demo',
-    sum: { b0: 'Crear enlace corto', b1: 'Redirigir', s0: 'Añadir gasto', s1: 'Calcular saldos', l0: 'Guardar secreto cifrado', l1: 'Listar cofre' },
+    sum: { b0: 'Crear enlace corto', b1: 'Redirigir', s0: 'Añadir gasto', s1: 'Calcular saldos', l0: 'Guardar entrada cifrada', l1: 'Listar entradas' },
     concepts: ['cena', 'súper', 'gasolina', 'entradas', 'pizza', 'luz'], settled: 'todo cuadrado ✓',
   },
   en: {
-    title: 'jorge/docs', intro: 'Each project documented the FastAPI way. Run an endpoint and the demo next to it actually responds.',
+    title: 'Three apps,', titleEm: 'in production', intro: 'Each project documented the FastAPI way. Run an endpoint and the demo next to it actually responds.',
     brevDesc: 'Link shortener. Takes a URL, generates a short code and redirects with a 307.',
     slateDesc: 'Tricount-style group expenses: log who paid and it works out what everyone owes and how to settle with the fewest transfers.',
     latchDesc: 'Zero-knowledge password manager: everything is encrypted in your browser and the server only stores ciphertext.',
-    open: 'Open', sim: 'simulated demo', real: 'real encryption in your browser', shorten: 'shorten', visit: 'visit →', paid: 'paid', add: '+ expense',
-    browser: 'your browser', server: 'what the server sees', secret: 'secret', keyNote: 'the key is derived here and never leaves this device.',
+    open: 'Open', shorten: 'shorten', visit: 'visit →', paid: 'paid', add: '+ expense',
+    gen: 'Password generator', another: '↻ generate', chars: 'chars',
     live: 'live · from the demo', execute: 'run in the demo',
-    sum: { b0: 'Create short link', b1: 'Redirect', s0: 'Add expense', s1: 'Compute balances', l0: 'Store encrypted secret', l1: 'List vault' },
+    sum: { b0: 'Create short link', b1: 'Redirect', s0: 'Add expense', s1: 'Compute balances', l0: 'Store encrypted entry', l1: 'List entries' },
     concepts: ['dinner', 'groceries', 'fuel', 'tickets', 'pizza', 'power bill'], settled: 'all settled ✓',
   },
 };
@@ -30,6 +30,30 @@ const T = {
 const PEOPLE = ['ana', 'marco', 'jorge'];
 const METHOD_BG = { GET: '#c6f24e', POST: '#f3efe6', PUT: 'oklch(0.82 0.1 200)' };
 const B62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+// Same sets as Latch's generator: look-alikes (0/O, 1/l/I) are left out.
+const PW_SETS = { lower: 'abcdefghjkmnpqrstuvwxyz', upper: 'ABCDEFGHJKLMNPQRSTUVWXYZ', digits: '23456789', symbols: '!#$%&*?@-_' };
+const PW_OPTIONS = [['upper', 'A–Z'], ['digits', '0–9'], ['symbols', '!#$']];
+// Latch's vermilion and violet, lightened to read on the dark background.
+const PW_DIGIT = '#ff8a6a', PW_SYMBOL = '#b892f0';
+const LATCH_CT = 'pU3KGCUwux1tEyze1iN7LtkeP3IfyxlxF0SU1kk8nVw0YL4xIB5p/g==';
+
+// Uniform index from crypto.getRandomValues; values from the uneven tail are redrawn.
+function randomIndex(max) {
+  const limit = Math.floor(2 ** 32 / max) * max, buf = new Uint32Array(1);
+  for (;;) { crypto.getRandomValues(buf); if (buf[0] < limit) return buf[0] % max; }
+}
+
+// Redraws until every enabled class shows up at least once, like Latch does.
+function generatePassword(o) {
+  const classes = [PW_SETS.lower, o.upper && PW_SETS.upper, o.digits && PW_SETS.digits, o.symbols && PW_SETS.symbols].filter(Boolean);
+  const pool = classes.join('');
+  for (;;) {
+    const pw = Array.from({ length: o.length }, () => pool[randomIndex(pool.length)]).join('');
+    if (classes.every(c => [...pw].some(ch => c.includes(ch)))) return pw;
+  }
+}
+
+const PW_DEFAULT = { length: 18, upper: true, digits: true, symbols: true };
 const mono = "'Geist Mono',monospace";
 const cap = s => s[0].toUpperCase() + s.slice(1);
 
@@ -64,7 +88,7 @@ function ProjectName({ letters }) {
   );
 }
 
-function DocsColumn({ name, label, url, desc, endpoints, t }) {
+function DocsColumn({ name, label, url, desc, endpoints, t, mobile }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
       <ProjectName letters={name} />
@@ -76,9 +100,16 @@ function DocsColumn({ name, label, url, desc, endpoints, t }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {endpoints.map(ep => (
           <div key={ep.id} style={{ border: `1px solid ${ep.open ? '#c6f24e' : 'rgba(243,239,230,.18)'}`, background: '#0d0f0b', transition: 'border-color .2s' }}>
-            <button onClick={ep.toggle} className="h-row" style={{ width: '100%', display: 'grid', gridTemplateColumns: '62px minmax(0,1fr) auto', alignItems: 'center', gap: 14, padding: '12px 14px', background: 'transparent', border: 0, cursor: 'pointer', color: '#f3efe6', textAlign: 'left', font: `500 13px/1 ${mono}` }}>
+            <button onClick={ep.toggle} className="h-row" style={{ width: '100%', display: 'grid', gridTemplateColumns: `${mobile ? 54 : 62}px minmax(0,1fr) auto`, alignItems: 'center', gap: mobile ? 12 : 14, padding: '12px 14px', background: 'transparent', border: 0, cursor: 'pointer', color: '#f3efe6', textAlign: 'left', font: `500 13px/1 ${mono}` }}>
               <span style={{ background: METHOD_BG[ep.method], color: '#0b0c0a', padding: '5px 0', textAlign: 'center', fontWeight: 600, fontSize: 11 }}>{ep.method}</span>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ep.path} <span style={{ color: 'rgba(243,239,230,.5)', fontWeight: 400 }}>— {ep.summary}</span></span>
+              {mobile ? (
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+                  <span style={{ overflowWrap: 'anywhere' }}>{ep.path}</span>
+                  <span style={{ color: 'rgba(243,239,230,.5)', fontWeight: 400, fontSize: 12 }}>{ep.summary}</span>
+                </span>
+              ) : (
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ep.path} <span style={{ color: 'rgba(243,239,230,.5)', fontWeight: 400 }}>— {ep.summary}</span></span>
+              )}
               <span style={{ color: '#c6f24e', transform: `rotate(${ep.open ? 90 : 0}deg)`, transition: 'transform .2s' }}>▸</span>
             </button>
             {ep.open && (
@@ -100,11 +131,11 @@ function DocsColumn({ name, label, url, desc, endpoints, t }) {
   );
 }
 
-function DemoPanel({ flash, title, badge, children }) {
+function DemoPanel({ flash, title, children }) {
   return (
     <div style={{ border: `1px solid ${flash ? '#c6f24e' : 'rgba(198,242,78,.45)'}`, boxShadow: flash ? '0 0 0 4px rgba(198,242,78,.18)' : 'none', transition: 'border-color .3s,box-shadow .3s', background: '#0d0f0b', display: 'flex', flexDirection: 'column', minWidth: 0, alignSelf: 'start' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid rgba(198,242,78,.3)', font: `500 11px/1 ${mono}`, color: '#c6f24e' }}>
-        <span>{title}</span><span style={{ color: 'rgba(243,239,230,.55)' }}>{badge}</span>
+        <span>{title}</span>
       </div>
       {children}
     </div>
@@ -116,7 +147,7 @@ export default class Projects extends Component {
     rev: { brev: 0, slate: 0, latch: 0 }, tick: 0,
     bUrl: 'https://github.com/i32mumaj/portfolio/blob/main/README.md', bDisplay: '', bLog: [], bClicks: 0, bCode: null,
     payer: 'ana', amount: 30, exp: [{ who: 'jorge', amt: 36, k: 0 }, { who: 'ana', amt: 12, k: 1 }],
-    lMaster: 'correct-horse-battery', lSecret: 'mi-contraseña-del-wifi', lCipher: '', lIv: '', openEp: null, flash: null,
+    pwOpt: PW_DEFAULT, pw: generatePassword(PW_DEFAULT), openEp: null, flash: null,
   };
   pBrev = createRef(); pSlate = createRef(); pLatch = createRef();
 
@@ -129,12 +160,11 @@ export default class Projects extends Component {
     this._gl = setInterval(() => {
       if (Object.values(this.state.rev).some(v => v > 0 && v < 1) || this._bAnim) this.setState(s => ({ tick: s.tick + 1 }));
     }, 60);
-    this.encrypt();
   }
 
   componentWillUnmount() {
     this._io?.disconnect();
-    clearInterval(this._gl); clearTimeout(this._encT); clearTimeout(this._fT);
+    clearInterval(this._gl); clearTimeout(this._fT);
     this._dead = true;
   }
 
@@ -160,7 +190,7 @@ export default class Projects extends Component {
         ch: done ? ch : (p === 0 ? ' ' : G[Math.floor(hash(i, this.state.tick) * G.length)]),
         ff: done && !pix ? "'Instrument Serif', serif" : 'VT323, monospace',
         fs: done && !pix ? '1em' : '.86em',
-        c: done ? '#f3efe6' : '#c6f24e',
+        c: done && !pix ? '#f3efe6' : '#c6f24e',
       };
     });
   }
@@ -212,31 +242,10 @@ export default class Projects extends Component {
     this.setState(s => ({ exp: [...s.exp, { who: s.payer, amt: s.amount, k: s.exp.length }] }));
   }
 
-  encrypt() {
-    clearTimeout(this._encT);
-    this._encT = setTimeout(async () => {
-      const { lMaster, lSecret } = this.state;
-      const hex = b => [...b].map(x => x.toString(16).padStart(2, '0')).join('');
-      let ct, iv;
-      try {
-        const enc = new TextEncoder();
-        this._salt = this._salt || crypto.getRandomValues(new Uint8Array(16));
-        const base = await crypto.subtle.importKey('raw', enc.encode(lMaster || ' '), 'PBKDF2', false, ['deriveKey']);
-        const key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: this._salt, iterations: 100000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt']);
-        const ivb = crypto.getRandomValues(new Uint8Array(12));
-        ct = hex(new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: ivb }, key, enc.encode(lSecret))));
-        iv = hex(ivb);
-      } catch {
-        ct = [...Array(48)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
-        iv = '—';
-      }
-      const tok = (this._encTok = (this._encTok || 0) + 1);
-      for (let f = 0; f <= 14; f++) {
-        if (this._dead || tok !== this._encTok) return;
-        this.setState({ lIv: iv, lCipher: [...ct].map((c, i) => f >= 14 || hash(i, 9) < f / 14 ? c : '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('') });
-        await wait(40);
-      }
-    }, 220);
+  // Changing the length or a character type generates a new password at once, as in Latch.
+  setPwOpt(changes) {
+    const pwOpt = { ...this.state.pwOpt, ...changes };
+    this.setState({ pwOpt, pw: generatePassword(pwOpt) });
   }
 
   endpoints(k, tr) {
@@ -252,8 +261,8 @@ export default class Projects extends Component {
         ['GET', '/groups/42/balances', 's1', '200 OK', `{\n  "settle": [${tr.map(([a, b, m]) => `\n    {"from": "${a}", "to": "${b}", "amount": ${m.toFixed(2)}}`).join(',')}${tr.length ? '\n  ' : ''}]\n}`, () => {}],
       ],
       latch: [
-        ['PUT', '/vault/items/1', 'l0', '204 No Content', `{\n  "ciphertext": "${(st.lCipher || '').slice(0, 32)}…",\n  "iv": "${st.lIv}"\n}`, () => this.encrypt()],
-        ['GET', '/vault/items', 'l1', '200 OK', `{\n  "items": [{"id": 1, "ciphertext": "${(st.lCipher || '').slice(0, 20)}…"}],\n  "server_knows_key": false\n}`, () => {}],
+        ['POST', '/api/entries', 'l0', '201 Created', `{\n  "entry_password": "${LATCH_CT}"\n}`, () => this.setPwOpt({})],
+        ['GET', '/api/entries', 'l1', '200 OK', `{\n  "entries": [{"entry_password": "${LATCH_CT.slice(0, 24)}…"}],\n  "server_knows_key": false\n}`, () => {}],
       ],
     };
     return EP[k].map(([method, path, s, status, res, act], i) => {
@@ -267,7 +276,7 @@ export default class Projects extends Component {
   }
 
   render() {
-    const t = this.t(), st = this.state, lang = this.props.lang;
+    const t = this.t(), st = this.state, lang = this.props.lang, m = this.props.mobile;
     const { bal, tr } = balances(st.exp);
     const mx = Math.max(1, ...PEOPLE.map(p => Math.abs(bal[p])));
     const eur = v => Math.abs(v).toFixed(2).replace('.', lang === 'es' ? ',' : '.') + ' €';
@@ -276,17 +285,17 @@ export default class Projects extends Component {
     const settle = tr.length ? tr.map(([a, b, m]) => `${cap(a)} → ${cap(b)}  ${eur(m)}`) : [t.settled];
 
     return (
-      <div style={{ background: '#0b0c0a', color: '#f3efe6', padding: '96px 5vw 120px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: '#0b0c0a', color: '#f3efe6', padding: m ? '56px 5vw 80px' : '96px 5vw 120px', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, flexWrap: 'wrap', paddingBottom: 40 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <h2 style={{ margin: 0, font: "400 clamp(56px,8vw,128px)/.9 'Instrument Serif',serif", letterSpacing: '-.02em' }}>{t.title}</h2>
+            <h2 style={{ margin: 0, font: `400 ${m ? '44px' : 'clamp(56px,6.4vw,104px)'}/1 'Instrument Serif',serif`, letterSpacing: '-.015em' }}>{t.title} <span style={{ fontStyle: 'italic', color: '#c6f24e' }}>{t.titleEm}</span></h2>
           </div>
           <div style={{ font: `400 13px/1.5 ${mono}`, color: 'rgba(243,239,230,.65)', maxWidth: 380 }}>{t.intro}</div>
         </div>
 
         <div ref={this.pBrev} data-p="brev" style={rowStyle}>
-          <DocsColumn label="Brev" name={this.nameLetters('Brev', 'brev', 2)} url={urls.brev} desc={t.brevDesc} endpoints={this.endpoints('brev', tr)} t={t} />
-          <DemoPanel flash={st.flash === 'brev'} title="POST /api/links" badge={t.sim}>
+          <DocsColumn label="Brev" name={this.nameLetters('Brev', 'brev', 2)} url={urls.brev} desc={t.brevDesc} endpoints={this.endpoints('brev', tr)} t={t} mobile={m} />
+          <DemoPanel flash={st.flash === 'brev'} title="POST /api/links">
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input value={st.bUrl} onChange={e => this.setState({ bUrl: e.target.value })} onKeyDown={e => { if (e.key === 'Enter') this.runBrev(); }} spellCheck="false" className="f-lime" style={{ ...inputStyle, flex: 1, minWidth: 0, color: '#f3efe6', padding: 12 }} />
@@ -305,8 +314,8 @@ export default class Projects extends Component {
         </div>
 
         <div ref={this.pSlate} data-p="slate" style={rowStyle}>
-          <DocsColumn label="Slate" name={this.nameLetters('Slate', 'slate', 2)} url={urls.slate} desc={t.slateDesc} endpoints={this.endpoints('slate', tr)} t={t} />
-          <DemoPanel flash={st.flash === 'slate'} title="GET /groups/42/balances" badge={t.sim}>
+          <DocsColumn label="Slate" name={this.nameLetters('Slate', 'slate', 2)} url={urls.slate} desc={t.slateDesc} endpoints={this.endpoints('slate', tr)} t={t} mobile={m} />
+          <DemoPanel flash={st.flash === 'slate'} title="GET /groups/42/balances">
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center', font: `500 12px/1 ${mono}` }}>
                 <span style={{ color: 'rgba(243,239,230,.6)' }}>{t.paid}</span>
@@ -357,26 +366,23 @@ export default class Projects extends Component {
         </div>
 
         <div ref={this.pLatch} data-p="latch" style={{ ...rowStyle, borderBottom: '1px solid rgba(198,242,78,.3)' }}>
-          <DocsColumn label="Latch" name={this.nameLetters('Latch', 'latch', 3)} url={urls.latch} desc={t.latchDesc} endpoints={this.endpoints('latch', tr)} t={t} />
-          <DemoPanel flash={st.flash === 'latch'} title="AES-256-GCM · PBKDF2" badge={t.real}>
-            <div style={{ padding: 20, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 16 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ font: `500 11px/1 ${mono}`, color: '#c6f24e' }}>{t.browser}</div>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 6, font: `400 11px/1 ${mono}`, color: 'rgba(243,239,230,.6)' }}>
-                  master password
-                  <input value={st.lMaster} onChange={e => { this.setState({ lMaster: e.target.value }); this.encrypt(); }} spellCheck="false" className="f-lime" style={{ ...inputStyle, padding: 10 }} />
-                </label>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: 6, font: `400 11px/1 ${mono}`, color: 'rgba(243,239,230,.6)' }}>
-                  {t.secret}
-                  <input value={st.lSecret} onChange={e => { this.setState({ lSecret: e.target.value }); this.encrypt(); }} spellCheck="false" className="f-lime" style={{ ...inputStyle, padding: 10 }} />
-                </label>
-                <div style={{ font: `400 11px/1.5 ${mono}`, color: 'rgba(243,239,230,.55)' }}>{t.keyNote}</div>
+          <DocsColumn label="Latch" name={this.nameLetters('Latch', 'latch', 3)} url={urls.latch} desc={t.latchDesc} endpoints={this.endpoints('latch', tr)} t={t} mobile={m} />
+          <DemoPanel flash={st.flash === 'latch'} title={t.gen}>
+            <div style={{ padding: m ? 16 : 20, display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 110, border: '1px dashed rgba(198,242,78,.35)', padding: 16 }}>
+                <div style={{ flex: 1, minWidth: 0, font: `500 ${m ? 22 : 26}px/1.45 ${mono}`, color: '#f3efe6', wordBreak: 'break-all', letterSpacing: '.02em' }}>
+                  {[...st.pw].map((ch, i) => <span key={i} style={{ color: /\d/.test(ch) ? PW_DIGIT : /[a-zA-Z]/.test(ch) ? undefined : PW_SYMBOL }}>{ch}</span>)}
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, borderLeft: '1px dashed rgba(198,242,78,.35)', paddingLeft: 16, minWidth: 0 }}>
-                <div style={{ font: `500 11px/1 ${mono}`, color: '#f3efe6' }}>{t.server}</div>
-                <div style={{ font: `400 12px/1.5 ${mono}`, color: '#c6f24e', wordBreak: 'break-all', minHeight: 96 }}>{st.lCipher || '…'}</div>
-                <div style={{ font: `400 11px/1.5 ${mono}`, color: 'rgba(243,239,230,.6)', wordBreak: 'break-all' }}>iv: {st.lIv || '…'}</div>
-                <div style={{ font: `400 11px/1.5 ${mono}`, color: 'rgba(243,239,230,.6)' }}>master_key: <span style={{ color: '#f3efe6' }}>null</span></div>
+              <button onClick={() => this.setPwOpt({})} className="h-shadow" style={{ background: '#c6f24e', color: '#0b0c0a', border: 0, padding: '13px 18px', font: `600 13px/1 ${mono}`, cursor: 'pointer', alignSelf: 'flex-start' }}>{t.another}</button>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 12, font: `500 12px/1 ${mono}`, color: 'rgba(243,239,230,.7)' }}>
+                <span style={{ width: 84, flex: 'none' }}>{st.pwOpt.length} {t.chars}</span>
+                <input type="range" min={8} max={40} value={st.pwOpt.length} onChange={e => this.setPwOpt({ length: +e.target.value })} style={{ flex: 1, minWidth: 0, accentColor: '#c6f24e' }} />
+              </label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', font: `500 12px/1 ${mono}` }}>
+                {PW_OPTIONS.map(([k, label]) => (
+                  <button key={k} aria-pressed={st.pwOpt[k]} onClick={() => this.setPwOpt({ [k]: !st.pwOpt[k] })} style={{ border: '1px solid #c6f24e', padding: '8px 12px', font: 'inherit', cursor: 'pointer', background: st.pwOpt[k] ? '#c6f24e' : 'transparent', color: st.pwOpt[k] ? '#0b0c0a' : '#c6f24e' }}>{st.pwOpt[k] ? `✓ ${label}` : label}</button>
+                ))}
               </div>
             </div>
           </DemoPanel>
