@@ -15,7 +15,7 @@ const S = {
     nf: 'comando no encontrado', tryHelp: "prueba 'help'", warn: "main.c:4:10: warning: unused variable 'tiempo_libre' [-Wunused-variable]",
     segHint: '// por eso ahora escribo Python.', sudoNo: 'visitor is not in the sudoers file. This incident will be reported.',
     sudoYes: 'vale, tú ganas. acceso root concedido.', sudoHint: "pista: ahora prueba 'rm -rf /'", rmNo: 'rm: permiso denegado (prueba sudo primero)',
-    rmJoke: '…es broma. Todo sigue en su sitio.', exit: 'no puedes irte todavía. escribe projects.', snakeHelp: 'snake — flechas / WASD · q para salir · llena el tablero para ganar',
+    rmJoke: '…es broma. Todo sigue en su sitio.', exit: 'no puedes irte todavía. escribe projects.', snakeHelp: 'snake — flechas / WASD · q para salir · llena el tablero para ganar', snakeHelpTouch: 'snake — desliza para girar · llena el tablero para ganar',
     over: 'game over · puntos', record: 'nuevo récord', cleared: 'tablero lleno', unlocked: 'nuevo comando disponible:', hiring: '→ abriendo contacto con el mensaje escrito…', pyHint: 'aquí no hay intérprete de Python, pero mis APIs sí lo usan: prueba curl brev.',
     boot: ['JM-BIOS v4.0  (c) 2026', 'memory test ............ 16384K OK', 'mounting /home/jorge .... ok', 'starting uvicorn ........ ok', '', 'Jorge Muñiz — Backend Engineer (Python)', "escribe 'help' o pulsa un comando de abajo."],
   },
@@ -28,7 +28,7 @@ const S = {
     nf: 'command not found', tryHelp: "try 'help'", warn: "main.c:4:10: warning: unused variable 'free_time' [-Wunused-variable]",
     segHint: "// that's why I write Python now.", sudoNo: 'visitor is not in the sudoers file. This incident will be reported.',
     sudoYes: 'fine, you win. root access granted.', sudoHint: "hint: now try 'rm -rf /'", rmNo: 'rm: permission denied (try sudo first)',
-    rmJoke: '…just kidding. Everything is still there.', exit: "you can't leave yet. type projects.", snakeHelp: 'snake — arrows / WASD · q to quit · fill the board to win',
+    rmJoke: '…just kidding. Everything is still there.', exit: "you can't leave yet. type projects.", snakeHelp: 'snake — arrows / WASD · q to quit · fill the board to win', snakeHelpTouch: 'snake — swipe to turn · fill the board to win',
     over: 'game over · score', record: 'new record', cleared: 'board cleared', unlocked: 'new command available:', hiring: '→ opening contact with the message ready…', pyHint: 'no Python interpreter here, but my APIs run on it: try curl brev.',
     boot: ['JM-BIOS v4.0  (c) 2026', 'memory test ............ 16384K OK', 'mounting /home/jorge .... ok', 'starting uvicorn ........ ok', '', 'Jorge Muñiz — Backend Engineer (Python)', "type 'help' or click a command below."],
   },
@@ -48,6 +48,7 @@ const SNAKE_CELL = 2;
 const SNAKE_FRUITS = 5;
 const SNAKE_TICK = 130;
 const GOD_TICK = 12;
+const SWIPE_PX = 24;
 // Cheat for the snake win: logged base64-encoded so it only shows up to someone poking around devtools.
 const GOD_HINT = 'c25ha2UgLS1nb2QtbW9kZQ==';
 
@@ -80,7 +81,11 @@ export default class Terminal extends Component {
     });
   }
   async many(arr, role = 'fg', d = 30) { for (const x of arr) { this.out(x, role); await this.w(d); } }
-  focus() { setTimeout(() => { const el = this.inputRef.current; if (el) el.focus({ preventScroll: true }); }, 0); }
+  // On phones only an explicit tap focuses the input, so the on-screen keyboard doesn't pop up after every command.
+  focus(tap = false) {
+    if (this.props.mobile && !tap) return;
+    setTimeout(() => { const el = this.inputRef.current; if (el) el.focus({ preventScroll: true }); }, 0);
+  }
 
   componentDidMount() {
     this._id = 0; this._tok = 0; this._hist = []; this._hi = 0; this._sudo = 0; this._root = false; this._booted = false;
@@ -325,7 +330,7 @@ export default class Terminal extends Component {
   }
 
   startSnake(god = false) {
-    this.out(this.S().snakeHelp, 'dim');
+    this.out(this.props.mobile ? this.S().snakeHelpTouch : this.S().snakeHelp, 'dim');
     if (!god && !Terminal._hinted) {
       Terminal._hinted = true;
       console.log('%c[snake] debug build · flag=' + GOD_HINT, 'color:#c6f24e;background:#0b0c0a;padding:2px 6px;font-family:monospace');
@@ -360,17 +365,33 @@ export default class Terminal extends Component {
 
   snakeKey(e) {
     if (!this.state.snake || !this._g) return;
-    const k = e.key.toLowerCase(), g = this._g;
+    const k = e.key.toLowerCase();
     const map = { arrowup: [0, -1], w: [0, -1], arrowdown: [0, 1], s: [0, 1], arrowleft: [-1, 0], a: [-1, 0], arrowright: [1, 0], d: [1, 0] };
     if (k === 'q' || k === 'escape') { e.preventDefault(); this.snakeEnd(); return; }
     if (map[k]) {
       e.preventDefault();
-      const [x, y] = map[k];
-      // Queue turns so two quick presses within one tick (e.g. up then left) both land; validate against the last queued one.
-      const last = g.q[g.q.length - 1] || g.d;
-      if (g.q.length < 3 && (x !== last.x || y !== last.y) && (x !== -last.x || y !== -last.y)) g.q.push({ x, y });
+      this.turn(...map[k]);
     }
   }
+
+  // Queue turns so two quick presses within one tick (e.g. up then left) both land; validate against the last queued one.
+  turn(x, y) {
+    const g = this._g;
+    if (!g) return;
+    const last = g.q[g.q.length - 1] || g.d;
+    if (g.q.length < 3 && (x !== last.x || y !== last.y) && (x !== -last.x || y !== -last.y)) g.q.push({ x, y });
+  }
+
+  // Swipes turn once the finger has travelled far enough; the origin resets so one drag can chain turns.
+  onTouchStart = e => { const t = e.touches[0]; this._sw = { x: t.clientX, y: t.clientY }; };
+  onTouchMove = e => {
+    if (!this.state.snake || !this._sw) return;
+    const t = e.touches[0], dx = t.clientX - this._sw.x, dy = t.clientY - this._sw.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_PX) return;
+    if (Math.abs(dx) > Math.abs(dy)) this.turn(Math.sign(dx), 0);
+    else this.turn(0, Math.sign(dy));
+    this._sw = { x: t.clientX, y: t.clientY };
+  };
 
   snakeStep() {
     const g = this._g;
@@ -469,11 +490,12 @@ export default class Terminal extends Component {
 
   render() {
     const { lines, input, busy, snake } = this.state;
+    const m = this.props.mobile;
     const showInput = !busy || (!snake && input.length > 0);
     return (
-      <div style={{ height: '100%', minHeight: 0, background: '#0b0c0a', padding: '24px 5vw 40px', display: 'flex' }}>
-        <div onClick={() => this.focus()} style={{ flex: 1, minWidth: 0, position: 'relative', borderRadius: 24, background: '#0d0f0b', boxShadow: 'inset 0 0 140px rgba(0,0,0,.85),0 0 0 12px #16190f,0 0 0 13px #2c3320', overflow: 'hidden', display: 'flex', flexDirection: 'column', font: "400 23px/1.22 'VT323',monospace", color: PAL.fg, textShadow: '0 0 7px oklch(0.88 0.1 125 / .45)' }}>
-          <div ref={this.scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '30px 36px 12px', scrollbarWidth: 'none' }}>
+      <div style={{ height: '100%', minHeight: 0, background: '#0b0c0a', padding: m ? '18px 14px 20px' : '24px 5vw 40px', display: 'flex' }}>
+        <div onClick={() => this.focus(true)} style={{ flex: 1, minWidth: 0, position: 'relative', borderRadius: m ? 14 : 24, background: '#0d0f0b', boxShadow: `inset 0 0 140px rgba(0,0,0,.85),0 0 0 ${m ? 6 : 12}px #16190f,0 0 0 ${m ? 7 : 13}px #2c3320`, overflow: 'hidden', display: 'flex', flexDirection: 'column', font: `400 ${m ? 19 : 23}px/1.22 'VT323',monospace`, color: PAL.fg, textShadow: '0 0 7px oklch(0.88 0.1 125 / .45)' }}>
+          <div ref={this.scrollRef} onTouchStart={this.onTouchStart} onTouchMove={this.onTouchMove} style={{ flex: 1, overflowY: 'auto', padding: m ? '18px 16px 10px' : '30px 36px 12px', scrollbarWidth: 'none', touchAction: snake ? 'none' : 'auto' }}>
             {lines.map(ln => (
               <div key={ln.id} style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', minHeight: '1.22em', color: PAL[ln.role] || PAL.fg }}>
                 <span style={{ color: PAL[ln.preRole] || PAL.acc }}>{ln.pre || ''}</span>
@@ -481,7 +503,7 @@ export default class Terminal extends Component {
                 {ln.href && <a href={ln.href} target="_blank" rel="noopener" style={{ color: '#c6f24e' }}>{ln.linkText}</a>}
               </div>
             ))}
-            {snake && <pre ref={this.snakeRef} style={{ margin: '6px 0', font: 'inherit', lineHeight: '18px', color: '#c6f24e' }} />}
+            {snake && <pre ref={this.snakeRef} style={{ margin: '6px 0', font: 'inherit', fontSize: m ? 'min(17px,4.4vw)' : undefined, lineHeight: m ? 'min(13.4px,3.47vw)' : '18px', color: '#c6f24e' }} />}
             {showInput && (
               <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
                 <span style={{ color: '#c6f24e', whiteSpace: 'nowrap' }}>jorge@portfolio:~$</span>
@@ -489,7 +511,7 @@ export default class Terminal extends Component {
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 18px', padding: '12px 36px 16px', borderTop: '1px dashed oklch(0.88 0.1 125 / .3)', fontSize: 19 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 18px', padding: m ? '10px 16px 12px' : '12px 36px 16px', borderTop: '1px dashed oklch(0.88 0.1 125 / .3)', fontSize: m ? 17 : 19 }}>
             {CHIPS.map(label => (
               <button key={label} onClick={e => { e.stopPropagation(); this.typeIn(label); }} className="h-chip" style={{ background: 'transparent', border: 0, padding: 0, cursor: 'pointer', font: 'inherit', color: PAL.dim, textShadow: 'inherit' }}>[{label}]</button>
             ))}
