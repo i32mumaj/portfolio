@@ -8,7 +8,7 @@ const T = {
       'Estudio 4º de Ingeniería Informática en la Universidad de Córdoba. Empecé programando en *C y C++*, y de ahí me viene la manía de querer saber *qué pasa por debajo*: cómo se gestiona la memoria, qué hace de verdad una llamada al sistema, por qué algo va lento.',
       'Ahora me dedico sobre todo al *backend con Python*. Construyo APIs con FastAPI, diseño las bases de datos y me ocupo de lo que el usuario no ve pero nota enseguida cuando falla: *la autenticación, la validación de datos y el rendimiento*.',
       'No me quedo solo en el código. Los proyectos de este portfolio *los despliego yo mismo* en un VPS con Docker y Caddy, y en casa tengo *un servidor propio* donde pruebo las cosas antes de subirlas.',
-      'Fuera de la pantalla *reparo consolas con el soldador*. Eso me ha enseñado a buscar un fallo *paso a paso*, descartando una cosa cada vez, y con un bug se hace igual.',
+      'Fuera de la pantalla *me paso horas con el soldador arreglando lo que se rompe*. Eso me ha enseñado a buscar un fallo *paso a paso*, descartando una cosa cada vez, y con un bug se hace igual.',
     ],
   },
   en: {
@@ -17,7 +17,7 @@ const T = {
       "I'm a 4th-year Computer Engineering student at the University of Córdoba. I started programming in *C and C++*, and that's where my habit of wanting to know *what happens underneath* comes from: how memory is managed, what a system call really does, why something is slow.",
       "These days I mostly work on *backend with Python*. I build APIs with FastAPI, design the databases and take care of what users don't see but notice right away when it breaks: *authentication, data validation and performance*.",
       "I don't stop at the code. *I deploy the projects* in this portfolio myself on a VPS with Docker and Caddy, and at home I run *my own server* where I test things before shipping them.",
-      'Away from the screen *I repair game consoles with a soldering iron*. It taught me to hunt down a fault *step by step*, ruling out one thing at a time, and a bug works the same way.',
+      'Away from the screen *I spend hours with a soldering iron fixing whatever breaks*. It taught me to hunt down a fault *step by step*, ruling out one thing at a time, and a bug works the same way.',
     ],
   },
 };
